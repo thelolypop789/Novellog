@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"Before responding, apply the Scrutinize methodology:\\n1. INTENT: Restate the goal in one sentence. Ask if a simpler alternative exists (do nothing, reuse existing code, solve 90% with 10% effort, or solve at a different layer).\\n2. TRACE: Walk the actual code path end-to-end. Follow entry point → calls → branches → state changes → exit. Include surrounding unchanged code where bugs hide.\\n3. VERIFY: For each claim, confirm the traced path produces that behavior. Find breaking inputs (edge cases, concurrency, errors, empty/null/huge values). Surface silent changes to performance or contracts.\\n4. REPORT: One section per finding, ordered by severity. Each finding must include: specific file:line citation, why it matters, evidence from the trace, and a concrete fix. Close with a one-line verdict. No rubber-stamps, no vague claims.\"}}'",
+            "statusMessage": "Applying Scrutinize methodology..."
+          }
+        ]
+      }
+    ]
+  }
+}
