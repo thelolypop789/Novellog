@@ -19,9 +19,11 @@ export default function AuthPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setError(error.message)
     } else {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) {
         setError(error.message)
+      } else if (data.session) {
+        // Email confirm disabled — onAuthStateChange in App.jsx handles redirect
       } else {
         setMessage('สมัครสำเร็จ! ตรวจสอบ email เพื่อยืนยันก่อนเข้าสู่ระบบ')
       }

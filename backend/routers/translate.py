@@ -5,7 +5,7 @@ from openai import APIStatusError
 from services.auth import get_current_user
 from services.chunker import split_chunks
 from services.gemini import translate_chunk
-from services.supabase_client import get_glossary, get_user_credits, deduct_credits
+from services.supabase_client import get_glossary, get_user_credits, deduct_credits, add_credits
 
 CHARS_PER_CREDIT = 1000
 
@@ -15,6 +15,7 @@ router = APIRouter()
 class TranslateRequest(BaseModel):
     text: str
     lang: str  # 'EN' or 'CN'
+    novel_id: str | None = None
 
 
 class TranslateResponse(BaseModel):
@@ -32,6 +33,8 @@ async def translate(req: TranslateRequest, user_id: str = Depends(get_current_us
         raise HTTPException(status_code=400, detail="text ว่างเปล่า")
 
     credits_needed = math.ceil(len(req.text) / CHARS_PER_CREDIT)
+
+    # Ensure user has a credits row, then do a quick pre-flight check
     remaining = get_user_credits(user_id)
     if remaining < credits_needed:
         raise HTTPException(
@@ -39,7 +42,15 @@ async def translate(req: TranslateRequest, user_id: str = Depends(get_current_us
             detail=f"Credits ไม่พอ ต้องการ {credits_needed} credit มีแค่ {remaining} credit",
         )
 
-    glossary = get_glossary(user_id, req.lang)
+    # Deduct BEFORE translating to prevent TOCTOU race condition
+    credits_after = deduct_credits(user_id, credits_needed)
+    if credits_after == -1:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Credits ไม่พอ (concurrent use detected) ต้องการ {credits_needed} credit",
+        )
+
+    glossary = get_glossary(user_id, req.lang, req.novel_id)
     chunks = split_chunks(req.text)
 
     translated_parts: list[str] = []
@@ -48,12 +59,14 @@ async def translate(req: TranslateRequest, user_id: str = Depends(get_current_us
             result = translate_chunk(chunk, req.lang, glossary)
             translated_parts.append(result)
     except APIStatusError as e:
+        # Refund credits if translation fails
+        add_credits(user_id, credits_needed)
         if e.status_code == 402:
             raise HTTPException(status_code=502, detail="DeepSeek credit หมด กรุณาติดต่อผู้ดูแลระบบ")
         raise HTTPException(status_code=500, detail=f"AI API error: {e.message}")
-
-    deduct_credits(user_id, credits_needed)
-    credits_after = remaining - credits_needed
+    except Exception as e:
+        add_credits(user_id, credits_needed)
+        raise HTTPException(status_code=500, detail=f"เกิดข้อผิดพลาด: {str(e)}")
 
     return TranslateResponse(
         translated="\n\n".join(translated_parts),

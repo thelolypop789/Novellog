@@ -2,8 +2,9 @@ import { useState } from 'react'
 import LanguageSelector from './LanguageSelector'
 import { translate, saveHistory } from '../services/api'
 
-export default function TranslatePanel({ onCreditUsed }) {
+export default function TranslatePanel({ onCreditUsed, novels = [] }) {
   const [lang, setLang] = useState('EN')
+  const [selectedNovelId, setSelectedNovelId] = useState(null)
   const [input, setInput] = useState('')
   const [output, setOutput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -13,6 +14,14 @@ export default function TranslatePanel({ onCreditUsed }) {
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  const filteredNovels = novels.filter((n) => n.lang === lang)
+
+  function handleLangChange(l) {
+    setLang(l)
+    setSaved(false)
+    setSelectedNovelId(null)
+  }
+
   async function handleTranslate() {
     if (!input.trim()) return
     setLoading(true)
@@ -21,7 +30,7 @@ export default function TranslatePanel({ onCreditUsed }) {
     setSaved(false)
     setCreditsUsed(0)
     try {
-      const data = await translate(input, lang)
+      const data = await translate(input, lang, selectedNovelId)
       setOutput(data.translated)
       setChunks(data.chunks)
       setCreditsUsed(data.credits_used)
@@ -59,7 +68,23 @@ export default function TranslatePanel({ onCreditUsed }) {
     <div className="flex gap-4 h-full">
       {/* Input side */}
       <div className="flex-1 flex flex-col gap-3">
-        <LanguageSelector value={lang} onChange={(l) => { setLang(l); setSaved(false) }} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <LanguageSelector value={lang} onChange={handleLangChange} />
+          {filteredNovels.length > 0 && (
+            <select
+              value={selectedNovelId ?? ''}
+              onChange={(e) => setSelectedNovelId(e.target.value || null)}
+              className="px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 text-gray-600 max-w-[200px] truncate"
+            >
+              <option value="">— ไม่เลือกนิยาย —</option>
+              {filteredNovels.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.title}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}

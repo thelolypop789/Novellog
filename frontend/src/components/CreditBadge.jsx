@@ -3,16 +3,14 @@ import { getMyCredits } from '../services/api'
 
 export default function CreditBadge({ refreshTrigger }) {
   const [credits, setCredits] = useState(null)
-  const [err, setErr] = useState('')
 
   useEffect(() => {
     getMyCredits()
-      .then((d) => { setCredits(d.credits); setErr('') })
-      .catch((e) => { setCredits(null); setErr(e.message) })
+      .then((d) => setCredits(d.credits))
+      .catch(() => setCredits(null))
   }, [refreshTrigger])
 
-  if (err) return <span className="text-xs text-red-500 px-2">{err}</span>
-  if (credits === null) return <span className="text-xs text-gray-400 px-2">loading...</span>
+  if (credits === null) return null
 
   const isLow = credits < 10
 
@@ -23,7 +21,7 @@ export default function CreditBadge({ refreshTrigger }) {
           ? 'bg-red-50 border-red-200 text-red-600'
           : 'bg-indigo-50 border-indigo-200 text-indigo-600'
       }`}
-      title={`1 credit = 1,000 ตัวอักษร`}
+      title="1 credit = 1,000 ตัวอักษร"
     >
       {credits} credit{credits !== 1 ? 's' : ''}
       {isLow && ' (ใกล้หมด)'}

@@ -4,12 +4,15 @@ import AuthPage from './components/AuthPage'
 import TranslatePanel from './components/TranslatePanel'
 import HistoryList from './components/HistoryList'
 import GlossaryManager from './components/GlossaryManager'
+import NovelManager from './components/NovelManager'
 import CreditBadge from './components/CreditBadge'
+import { getNovels } from './services/api'
 
 const TABS = [
   { id: 'translate', label: 'แปล' },
   { id: 'history', label: 'ประวัติ' },
   { id: 'glossary', label: 'Glossary' },
+  { id: 'novels', label: 'นิยาย' },
 ]
 
 export default function App() {
@@ -17,6 +20,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [tab, setTab] = useState('translate')
   const [creditRefresh, setCreditRefresh] = useState(0)
+  const [novels, setNovels] = useState([])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -28,6 +32,18 @@ export default function App() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      getNovels().then(setNovels).catch(() => {})
+    } else {
+      setNovels([])
+    }
+  }, [user])
+
+  function refreshNovels() {
+    getNovels().then(setNovels).catch(() => {})
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -89,7 +105,10 @@ export default function App() {
             className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col"
             style={{ height: 'calc(100vh - 140px)' }}
           >
-            <TranslatePanel onCreditUsed={() => setCreditRefresh((n) => n + 1)} />
+            <TranslatePanel
+              onCreditUsed={() => setCreditRefresh((n) => n + 1)}
+              novels={novels}
+            />
           </div>
         )}
 
@@ -102,8 +121,15 @@ export default function App() {
 
         {tab === 'glossary' && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-sm font-semibold text-gray-600 mb-4">จัดการ Glossary</h2>
+            <h2 className="text-sm font-semibold text-gray-600 mb-4">Global Glossary</h2>
             <GlossaryManager />
+          </div>
+        )}
+
+        {tab === 'novels' && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="text-sm font-semibold text-gray-600 mb-4">จัดการนิยาย</h2>
+            <NovelManager onNovelsChange={refreshNovels} />
           </div>
         )}
       </main>
