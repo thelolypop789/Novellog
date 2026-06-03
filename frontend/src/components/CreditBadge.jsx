@@ -3,14 +3,16 @@ import { getMyCredits } from '../services/api'
 
 export default function CreditBadge({ refreshTrigger }) {
   const [credits, setCredits] = useState(null)
+  const [err, setErr] = useState('')
 
   useEffect(() => {
     getMyCredits()
-      .then((d) => setCredits(d.credits))
-      .catch(() => setCredits(null))
+      .then((d) => { setCredits(d.credits); setErr('') })
+      .catch((e) => { setCredits(null); setErr(e.message) })
   }, [refreshTrigger])
 
-  if (credits === null) return null
+  if (err) return <span className="text-xs text-red-500 px-2">{err}</span>
+  if (credits === null) return <span className="text-xs text-gray-400 px-2">loading...</span>
 
   const isLow = credits < 10
 
