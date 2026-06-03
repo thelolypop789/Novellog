@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.pycache/
+
+# Environment variables — ห้าม commit เด็ดขาด
+backend/.env
+frontend/.env
+.env
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build
+frontend/dist/
+frontend/.vite/
+
+# Python venv
+venv/
+.venv/

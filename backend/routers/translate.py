@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from openai import APIStatusError
 from services.chunker import split_chunks
 from services.gemini import translate_chunk
 from services.supabase_client import get_glossary
@@ -28,9 +29,14 @@ async def translate(req: TranslateRequest):
     chunks = split_chunks(req.text)
 
     translated_parts: list[str] = []
-    for chunk in chunks:
-        result = translate_chunk(chunk, req.lang, glossary)
-        translated_parts.append(result)
+    try:
+        for chunk in chunks:
+            result = translate_chunk(chunk, req.lang, glossary)
+            translated_parts.append(result)
+    except APIStatusError as e:
+        if e.status_code == 402:
+            raise HTTPException(status_code=402, detail="DeepSeek credit หมด กรุณาเติม credit")
+        raise HTTPException(status_code=500, detail=f"AI API error: {e.message}")
 
     return TranslateResponse(
         translated="\n\n".join(translated_parts),
