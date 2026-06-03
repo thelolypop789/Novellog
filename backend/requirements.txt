@@ -3,3 +3,4 @@ uvicorn[standard]
 openai
 supabase
 python-dotenv
+python-jose[cryptography]

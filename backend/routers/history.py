@@ -1,11 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from services.auth import get_current_user
 from services.supabase_client import (
     save_translation,
     get_translations,
     get_glossary,
     upsert_glossary,
     delete_glossary,
+    get_user_credits,
 )
 
 router = APIRouter()
@@ -24,29 +26,34 @@ class GlossaryItem(BaseModel):
 
 
 @router.get("/history")
-async def list_history():
-    return get_translations()
+async def list_history(user_id: str = Depends(get_current_user)):
+    return get_translations(user_id)
 
 
 @router.post("/history")
-async def add_history(req: SaveTranslationRequest):
-    save_translation(req.lang, req.original, req.translated)
+async def add_history(req: SaveTranslationRequest, user_id: str = Depends(get_current_user)):
+    save_translation(user_id, req.lang, req.original, req.translated)
     return {"status": "ok"}
 
 
 @router.get("/glossary/{lang}")
-async def list_glossary(lang: str):
-    data = get_glossary(lang)
+async def list_glossary(lang: str, user_id: str = Depends(get_current_user)):
+    data = get_glossary(user_id, lang)
     return [{"source_word": k, "target_word": v} for k, v in data.items()]
 
 
 @router.post("/glossary")
-async def add_glossary(item: GlossaryItem):
-    upsert_glossary(item.source_word, item.target_word, item.lang)
+async def add_glossary(item: GlossaryItem, user_id: str = Depends(get_current_user)):
+    upsert_glossary(user_id, item.source_word, item.target_word, item.lang)
     return {"status": "ok"}
 
 
 @router.delete("/glossary/{lang}/{source_word}")
-async def remove_glossary(lang: str, source_word: str):
-    delete_glossary(source_word, lang)
+async def remove_glossary(lang: str, source_word: str, user_id: str = Depends(get_current_user)):
+    delete_glossary(user_id, source_word, lang)
     return {"status": "ok"}
+
+
+@router.get("/me/credits")
+async def my_credits(user_id: str = Depends(get_current_user)):
+    return {"credits": get_user_credits(user_id)}

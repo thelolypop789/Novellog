@@ -2,13 +2,14 @@ import { useState } from 'react'
 import LanguageSelector from './LanguageSelector'
 import { translate, saveHistory } from '../services/api'
 
-export default function TranslatePanel() {
+export default function TranslatePanel({ onCreditUsed }) {
   const [lang, setLang] = useState('EN')
   const [input, setInput] = useState('')
   const [output, setOutput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [chunks, setChunks] = useState(0)
+  const [creditsUsed, setCreditsUsed] = useState(0)
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -18,10 +19,13 @@ export default function TranslatePanel() {
     setError('')
     setOutput('')
     setSaved(false)
+    setCreditsUsed(0)
     try {
       const data = await translate(input, lang)
       setOutput(data.translated)
       setChunks(data.chunks)
+      setCreditsUsed(data.credits_used)
+      onCreditUsed?.()
     } catch (e) {
       setError(e.message)
     } finally {
@@ -79,7 +83,8 @@ export default function TranslatePanel() {
       <div className="flex-1 flex flex-col gap-3">
         <div className="flex items-center justify-between h-[34px]">
           <span className="text-xs text-gray-400">
-            {chunks > 0 && `แปลแล้ว ${chunks} chunk${chunks > 1 ? 's' : ''}`}
+            {chunks > 0 && `${chunks} chunk${chunks > 1 ? 's' : ''}`}
+            {creditsUsed > 0 && ` · ใช้ ${creditsUsed} credit`}
           </span>
           {error && <span className="text-xs text-red-500 truncate ml-2">{error}</span>}
         </div>

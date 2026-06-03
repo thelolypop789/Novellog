@@ -1,3 +1,5 @@
+import { supabase } from '../lib/supabase'
+
 function getBaseUrl() {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
   // Codespaces: swap frontend port to backend port 8000 automatically
@@ -10,9 +12,16 @@ function getBaseUrl() {
 
 const BASE_URL = getBaseUrl()
 
+async function getAuthHeader() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('กรุณาเข้าสู่ระบบก่อน')
+  return { Authorization: `Bearer ${session.access_token}` }
+}
+
 async function request(path, options = {}) {
+  const authHeader = await getAuthHeader()
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeader },
     ...options,
   })
   if (!res.ok) {
@@ -48,3 +57,5 @@ export const deleteGlossary = (lang, source_word) =>
   request(`/glossary/${lang}/${encodeURIComponent(source_word)}`, {
     method: 'DELETE',
   })
+
+export const getMyCredits = () => request('/me/credits')
