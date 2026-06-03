@@ -1,5 +1,5 @@
 import os
-import google.generativeai as genai
+from openai import OpenAI
 
 SYSTEM_PROMPT = (
     "คุณคือนักแปลนิยาย แปลเป็นภาษาไทยสำนวนธรรมชาติ\n"
@@ -7,11 +7,9 @@ SYSTEM_PROMPT = (
     "ตอบเฉพาะข้อความที่แปลแล้วเท่านั้น"
 )
 
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-
-_model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash",
-    system_instruction=SYSTEM_PROMPT,
+_client = OpenAI(
+    api_key=os.environ["DEEPSEEK_API_KEY"],
+    base_url="https://api.deepseek.com",
 )
 
 
@@ -22,5 +20,13 @@ def translate_chunk(text: str, lang: str, glossary: dict[str, str] | None = None
         gloss_str = f"ชื่อ: {pairs}\n"
 
     prompt = f"{lang}>TH\n{gloss_str}{text}"
-    response = _model.generate_content(prompt)
-    return response.text.strip()
+    response = _client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=1.0,
+        max_tokens=4096,
+    )
+    return response.choices[0].message.content.strip()
