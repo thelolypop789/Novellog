@@ -1,9 +1,9 @@
+from dotenv import load_dotenv
+load_dotenv()  # ต้องเรียกก่อน import อื่นที่อ่าน os.environ
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 from routers import translate, history
-
-load_dotenv()
 
 app = FastAPI(title="NovelLog API")
 
