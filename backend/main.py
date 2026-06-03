@@ -9,8 +9,8 @@ app = FastAPI(title="NovelLog API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ปรับเป็น Vercel URL จริงตอน deploy: ["https://your-app.vercel.app"]
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
