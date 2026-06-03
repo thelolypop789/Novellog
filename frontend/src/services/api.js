@@ -1,4 +1,14 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+function getBaseUrl() {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
+  // Codespaces: swap frontend port to backend port 8000 automatically
+  const host = window.location.hostname
+  if (host.includes('.app.github.dev')) {
+    return `https://${host.replace(/-\d+\.app\.github\.dev$/, '-8000.app.github.dev')}`
+  }
+  return 'http://localhost:8000'
+}
+
+const BASE_URL = getBaseUrl()
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
