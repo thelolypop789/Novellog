@@ -17,11 +17,18 @@ CREATE POLICY "novels_own" ON novels FOR ALL USING (auth.uid() = user_id);
 -- 2. novel_id column in glossary (NULL = global glossary)
 ALTER TABLE glossary ADD COLUMN IF NOT EXISTS novel_id uuid REFERENCES novels(id) ON DELETE CASCADE;
 
--- 3. Drop old unique constraint on glossary (replaced by partial indexes below)
---    Try common auto-generated names; IF EXISTS makes this safe to run multiple times
-ALTER TABLE glossary DROP CONSTRAINT IF EXISTS glossary_user_id_source_word_lang_key;
-ALTER TABLE glossary DROP CONSTRAINT IF EXISTS glossary_source_word_user_id_lang_key;
-ALTER TABLE glossary DROP CONSTRAINT IF EXISTS glossary_user_id_source_word_lang_novel_id_key;
+-- 3. Drop ALL unique constraints on glossary (will be replaced by partial indexes below)
+--    Use catalog lookup instead of guessing names — safe to run multiple times
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN
+    SELECT conname FROM pg_constraint
+    WHERE conrelid = 'glossary'::regclass AND contype = 'u'
+  LOOP
+    EXECUTE format('ALTER TABLE glossary DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+END $$;
 
 -- 4. Partial unique indexes: global terms and per-novel terms each have their own space
 CREATE UNIQUE INDEX IF NOT EXISTS glossary_global_unique

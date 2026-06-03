@@ -56,7 +56,7 @@ def get_glossary(user_id: str, lang: str, novel_id: str | None = None) -> dict[s
         .select("source_word, target_word")
         .eq("user_id", user_id)
         .eq("lang", lang)
-        .is_("novel_id", "null")
+        .is_("novel_id", None)
         .execute()
     )
     result = {row["source_word"]: row["target_word"] for row in res.data}
@@ -101,7 +101,7 @@ def upsert_glossary(
         .eq("source_word", source_word)
         .eq("lang", lang)
     )
-    query = query.eq("novel_id", novel_id) if novel_id else query.is_("novel_id", "null")
+    query = query.eq("novel_id", novel_id) if novel_id else query.is_("novel_id", None)
     existing = query.execute()
 
     if existing.data:
@@ -112,7 +112,7 @@ def upsert_glossary(
             .eq("source_word", source_word)
             .eq("lang", lang)
         )
-        upd = upd.eq("novel_id", novel_id) if novel_id else upd.is_("novel_id", "null")
+        upd = upd.eq("novel_id", novel_id) if novel_id else upd.is_("novel_id", None)
         upd.execute()
     else:
         data: dict = {
@@ -135,7 +135,7 @@ def delete_glossary(user_id: str, source_word: str, lang: str, novel_id: str | N
         .eq("source_word", source_word)
         .eq("lang", lang)
     )
-    query = query.eq("novel_id", novel_id) if novel_id else query.is_("novel_id", "null")
+    query = query.eq("novel_id", novel_id) if novel_id else query.is_("novel_id", None)
     query.execute()
 
 
