@@ -83,10 +83,16 @@ export const getMyCredits = () => request('/me/credits')
 
 export const getNovels = () => request('/novels')
 
-export const createNovel = (title, url, lang) =>
+export const createNovel = (title, url, lang, genre = null, styleNotes = null) =>
   request('/novels', {
     method: 'POST',
-    body: JSON.stringify({ title, url, lang }),
+    body: JSON.stringify({ title, url, lang, genre, style_notes: styleNotes }),
+  })
+
+export const updateNovel = (novelId, data) =>
+  request(`/novels/${novelId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   })
 
 export const deleteNovel = (novelId) =>

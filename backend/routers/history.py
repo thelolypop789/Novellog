@@ -11,6 +11,7 @@ from services.supabase_client import (
     get_user_credits,
     get_novels,
     create_novel,
+    update_novel,
     delete_novel,
 )
 
@@ -34,6 +35,13 @@ class NovelCreate(BaseModel):
     title: str
     url: str | None = None
     lang: str = "EN"
+    genre: str | None = None
+    style_notes: str | None = None
+
+
+class NovelUpdate(BaseModel):
+    genre: str | None = None
+    style_notes: str | None = None
 
 
 @router.get("/history")
@@ -82,7 +90,15 @@ async def list_novels(user_id: str = Depends(get_current_user)):
 
 @router.post("/novels")
 async def add_novel(req: NovelCreate, user_id: str = Depends(get_current_user)):
-    return create_novel(user_id, req.title, req.url, req.lang)
+    return create_novel(user_id, req.title, req.url, req.lang, req.genre, req.style_notes)
+
+
+@router.patch("/novels/{novel_id}")
+async def patch_novel(novel_id: str, req: NovelUpdate, user_id: str = Depends(get_current_user)):
+    fields = req.model_dump(exclude_none=True)
+    if not fields:
+        return {}
+    return update_novel(user_id, novel_id, **fields)
 
 
 @router.delete("/novels/{novel_id}")

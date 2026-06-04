@@ -153,14 +153,45 @@ def get_novels(user_id: str) -> list[dict]:
     return res.data
 
 
-def create_novel(user_id: str, title: str, url: str | None, lang: str) -> dict:
+def get_novel(user_id: str, novel_id: str) -> dict | None:
     res = (
         get_service_client()
         .table("novels")
-        .insert({"user_id": user_id, "title": title, "url": url, "lang": lang})
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("id", novel_id)
         .execute()
     )
+    return res.data[0] if res.data else None
+
+
+def create_novel(
+    user_id: str,
+    title: str,
+    url: str | None,
+    lang: str,
+    genre: str | None = None,
+    style_notes: str | None = None,
+) -> dict:
+    data: dict = {"user_id": user_id, "title": title, "url": url, "lang": lang}
+    if genre:
+        data["genre"] = genre
+    if style_notes:
+        data["style_notes"] = style_notes
+    res = get_service_client().table("novels").insert(data).execute()
     return res.data[0]
+
+
+def update_novel(user_id: str, novel_id: str, **fields) -> dict:
+    res = (
+        get_service_client()
+        .table("novels")
+        .update(fields)
+        .eq("user_id", user_id)
+        .eq("id", novel_id)
+        .execute()
+    )
+    return res.data[0] if res.data else {}
 
 
 def delete_novel(user_id: str, novel_id: str) -> None:

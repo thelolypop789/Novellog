@@ -1,5 +1,22 @@
 import { useState, useEffect } from 'react'
-import { getNovels, createNovel, deleteNovel, getGlossary, addGlossary, deleteGlossary } from '../services/api'
+import { getNovels, createNovel, updateNovel, deleteNovel, getGlossary, addGlossary, deleteGlossary } from '../services/api'
+
+const GENRES = [
+  { value: '', label: '— ไม่ระบุ —' },
+  { value: 'Xianxia', label: 'Xianxia / Wuxia (กำลังภายใน / เซียน)' },
+  { value: 'Isekai', label: 'Isekai / Transmigration (โอ้โลก / ข้ามมิติ)' },
+  { value: 'Romance', label: 'Romance (โรแมนติก)' },
+  { value: 'BL', label: "BL (Boys' Love)" },
+  { value: 'GL', label: "GL (Girls' Love)" },
+  { value: 'Action', label: 'Action / Adventure (แอ็กชัน)' },
+  { value: 'Horror', label: 'Horror / Thriller (สยองขวัญ)' },
+  { value: 'Mystery', label: 'Mystery / Detective (สืบสวน)' },
+  { value: 'Historical', label: 'Historical (ประวัติศาสตร์)' },
+  { value: 'Slice of Life', label: 'Slice of Life (ชีวิตประจำวัน)' },
+]
+
+const STYLE_PLACEHOLDER =
+  'เช่น: พระเอกเย็นชา แทนตัวเองว่า "ข้า" เรียกนางเอกว่า "เจ้า" · ห้ามแปล cultivation terms ตรงตัว · ใช้ภาษาดุดัน จริงจัง'
 
 function NovelGlossary({ novel }) {
   const [items, setItems] = useState([])
@@ -46,7 +63,7 @@ function NovelGlossary({ novel }) {
   }
 
   return (
-    <div className="mt-3 pl-4 border-l-2 border-indigo-100">
+    <div>
       <p className="text-xs text-gray-400 mb-2">
         Glossary เฉพาะเรื่องนี้ ({novel.lang}) — ใช้ร่วมกับ Global Glossary ตอนแปล
       </p>
@@ -102,6 +119,67 @@ function NovelGlossary({ novel }) {
   )
 }
 
+function NovelStyleEditor({ novel, onSaved }) {
+  const [genre, setGenre] = useState(novel.genre ?? '')
+  const [styleNotes, setStyleNotes] = useState(novel.style_notes ?? '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const dirty = genre !== (novel.genre ?? '') || styleNotes !== (novel.style_notes ?? '')
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const updated = await updateNovel(novel.id, { genre: genre || null, style_notes: styleNotes || null })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      onSaved?.(updated)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="mb-4">
+      <p className="text-xs text-gray-400 mb-2">บริบทสำหรับ AI — ใช้ตอนแปลด้วยนิยายเรื่องนี้</p>
+      <div className="flex gap-2 mb-2">
+        <div className="flex-1">
+          <label className="text-xs text-gray-500 mb-1 block">แนว (Genre)</label>
+          <select
+            value={genre}
+            onChange={(e) => setGenre(e.target.value)}
+            className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300 text-gray-600"
+          >
+            {GENRES.map((g) => (
+              <option key={g.value} value={g.value}>{g.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="mb-2">
+        <label className="text-xs text-gray-500 mb-1 block">Style Notes (คำสั่งเสริมให้ AI)</label>
+        <textarea
+          value={styleNotes}
+          onChange={(e) => setStyleNotes(e.target.value)}
+          placeholder={STYLE_PLACEHOLDER}
+          rows={3}
+          className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300 resize-none"
+        />
+      </div>
+      {dirty && (
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+        >
+          {saving ? 'กำลังบันทึก...' : saved ? 'บันทึกแล้ว ✓' : 'บันทึก Style'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function NovelManager({ onNovelsChange }) {
   const [novels, setNovels] = useState([])
   const [loading, setLoading] = useState(false)
@@ -109,6 +187,8 @@ export default function NovelManager({ onNovelsChange }) {
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [lang, setLang] = useState('EN')
+  const [genre, setGenre] = useState('')
+  const [styleNotes, setStyleNotes] = useState('')
   const [expandedId, setExpandedId] = useState(null)
   const [creating, setCreating] = useState(false)
 
@@ -124,10 +204,12 @@ export default function NovelManager({ onNovelsChange }) {
     if (!title.trim()) return
     setCreating(true)
     try {
-      const novel = await createNovel(title.trim(), url.trim() || null, lang)
+      const novel = await createNovel(title.trim(), url.trim() || null, lang, genre || null, styleNotes.trim() || null)
       setNovels((prev) => [...prev, novel])
       setTitle('')
       setUrl('')
+      setGenre('')
+      setStyleNotes('')
       onNovelsChange?.()
     } catch (e) {
       setError(e.message)
@@ -148,40 +230,62 @@ export default function NovelManager({ onNovelsChange }) {
     }
   }
 
+  function handleStyleSaved(updated) {
+    setNovels((prev) => prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n)))
+    onNovelsChange?.()
+  }
+
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       {/* Create form */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 p-4 border border-gray-200 rounded-lg bg-gray-50">
+        <p className="text-xs font-medium text-gray-500 mb-1">เพิ่มนิยายใหม่</p>
         <div className="flex gap-2">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-            placeholder="ชื่อนิยาย"
-            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            placeholder="ชื่อนิยาย *"
+            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
           />
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
           >
             <option value="EN">EN</option>
             <option value="CN">CN</option>
           </select>
-          <button
-            onClick={handleCreate}
-            disabled={!title.trim() || creating}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {creating ? 'กำลังเพิ่ม...' : 'เพิ่มนิยาย'}
-          </button>
         </div>
+        <select
+          value={genre}
+          onChange={(e) => setGenre(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white text-gray-600"
+        >
+          {GENRES.map((g) => (
+            <option key={g.value} value={g.value}>{g.label}</option>
+          ))}
+        </select>
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="ลิงก์ต้นฉบับ (optional)"
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
         />
+        <textarea
+          value={styleNotes}
+          onChange={(e) => setStyleNotes(e.target.value)}
+          placeholder={STYLE_PLACEHOLDER}
+          rows={2}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none bg-white"
+        />
+        <button
+          onClick={handleCreate}
+          disabled={!title.trim() || creating}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors self-end"
+        >
+          {creating ? 'กำลังเพิ่ม...' : 'เพิ่มนิยาย'}
+        </button>
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -203,6 +307,11 @@ export default function NovelManager({ onNovelsChange }) {
                     <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
                       {novel.lang}
                     </span>
+                    {novel.genre && (
+                      <span className="text-xs text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                        {novel.genre}
+                      </span>
+                    )}
                   </div>
                   {novel.url && (
                     <a
@@ -219,7 +328,7 @@ export default function NovelManager({ onNovelsChange }) {
                   onClick={() => setExpandedId(expandedId === novel.id ? null : novel.id)}
                   className="text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1 border border-indigo-200 rounded transition-colors flex-shrink-0"
                 >
-                  {expandedId === novel.id ? 'ซ่อน' : 'Glossary'}
+                  {expandedId === novel.id ? 'ซ่อน' : 'จัดการ'}
                 </button>
                 <button
                   onClick={() => handleDelete(novel.id)}
@@ -229,8 +338,11 @@ export default function NovelManager({ onNovelsChange }) {
                 </button>
               </div>
               {expandedId === novel.id && (
-                <div className="px-4 pb-4">
-                  <NovelGlossary novel={novel} />
+                <div className="px-4 pb-4 border-t border-gray-100 pt-3 flex flex-col gap-4">
+                  <NovelStyleEditor novel={novel} onSaved={handleStyleSaved} />
+                  <div className="border-t border-gray-100 pt-3">
+                    <NovelGlossary novel={novel} />
+                  </div>
                 </div>
               )}
             </div>

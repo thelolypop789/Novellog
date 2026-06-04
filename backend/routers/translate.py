@@ -5,7 +5,7 @@ from openai import APIStatusError
 from services.auth import get_current_user
 from services.chunker import split_chunks
 from services.gemini import translate_chunk
-from services.supabase_client import get_glossary, get_user_credits, deduct_credits, add_credits
+from services.supabase_client import get_glossary, get_user_credits, deduct_credits, add_credits, get_novel
 
 CHARS_PER_CREDIT = 1000
 
@@ -50,13 +50,21 @@ async def translate(req: TranslateRequest, user_id: str = Depends(get_current_us
             detail=f"Credits ไม่พอ (concurrent use detected) ต้องการ {credits_needed} credit",
         )
 
+    novel_genre = None
+    novel_style = None
+    if req.novel_id:
+        novel = get_novel(user_id, req.novel_id)
+        if novel:
+            novel_genre = novel.get("genre")
+            novel_style = novel.get("style_notes")
+
     glossary = get_glossary(user_id, req.lang, req.novel_id)
     chunks = split_chunks(req.text)
 
     translated_parts: list[str] = []
     try:
         for chunk in chunks:
-            result = translate_chunk(chunk, req.lang, glossary)
+            result = translate_chunk(chunk, req.lang, glossary, genre=novel_genre, style_notes=novel_style)
             translated_parts.append(result)
     except APIStatusError as e:
         # Refund credits if translation fails

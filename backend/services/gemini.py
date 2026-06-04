@@ -1,13 +1,15 @@
 import os
 from openai import OpenAI
 
-SYSTEM_PROMPT = (
-    "You are a professional novel translator. "
-    "ALWAYS translate to Thai (ภาษาไทย). "
-    "NEVER output Chinese, English, or any other language.\n"
-    "คุณคือนักแปลนิยายมืออาชีพ แปลเป็นภาษาไทยเท่านั้น ห้ามแปลเป็นภาษาจีนหรือภาษาอื่นเด็ดขาด\n"
-    "รักษาอารมณ์ต้นฉบับ ห้ามอธิบายหรือเพิ่มเติมใดๆ ตอบเฉพาะข้อความที่แปลแล้วเท่านั้น"
-)
+SYSTEM_PROMPT = """You are an expert Thai novel translator. Your translations read as naturally as if they were originally written in Thai — fluid, emotionally resonant, and true to the author's voice.
+
+Rules:
+1. ALWAYS output in Thai (ภาษาไทย) ONLY. Never output Chinese, English, or any other language.
+2. Translate every sentence completely. Do NOT summarize, condense, or omit any part of the original text.
+3. Adapt idioms, humor, and slang into natural Thai equivalents — never translate word-for-word when it would sound unnatural.
+4. Preserve the original tone, rhythm, pacing, and emotional intensity exactly.
+5. Keep character and place names as phonetic transliterations unless the glossary specifies otherwise.
+6. Only return the final Thai translation. Do not include any preamble, explanation, or translator's notes."""
 
 _client = OpenAI(
     api_key=os.environ["DEEPSEEK_API_KEY"],
@@ -15,14 +17,30 @@ _client = OpenAI(
 )
 
 
-def translate_chunk(text: str, lang: str, glossary: dict[str, str] | None = None) -> str:
-    gloss_str = ""
+def translate_chunk(
+    text: str,
+    lang: str,
+    glossary: dict[str, str] | None = None,
+    genre: str | None = None,
+    style_notes: str | None = None,
+) -> str:
+    context_parts = []
+
+    if genre:
+        context_parts.append(f"Genre: {genre}")
+    if style_notes:
+        context_parts.append(f"Style notes: {style_notes}")
     if glossary:
         pairs = ", ".join(f"{k}={v}" for k, v in glossary.items())
-        gloss_str = f"ชื่อ: {pairs}\n"
+        context_parts.append(f"Glossary: {pairs}")
+
+    context_str = "\n".join(context_parts)
+    if context_str:
+        context_str += "\n\n"
 
     lang_label = "English" if lang == "EN" else "Chinese"
-    prompt = f"Translate the following {lang_label} text to Thai (ภาษาไทย):\n{gloss_str}{text}"
+    prompt = f"{context_str}Translate the following {lang_label} text to Thai (ภาษาไทย):\n{text}"
+
     response = _client.chat.completions.create(
         model="deepseek-chat",
         messages=[
