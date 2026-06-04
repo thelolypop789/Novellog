@@ -129,7 +129,10 @@ export default function App() {
         {tab === 'novels' && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-sm font-semibold text-gray-600 mb-4">จัดการนิยาย</h2>
-            <NovelManager onNovelsChange={refreshNovels} />
+            <NovelManager
+              onNovelsChange={refreshNovels}
+              onCreditUsed={() => setCreditRefresh((n) => n + 1)}
+            />
           </div>
         )}
       </main>

@@ -97,3 +97,9 @@ export const updateNovel = (novelId, data) =>
 
 export const deleteNovel = (novelId) =>
   request(`/novels/${novelId}`, { method: 'DELETE' })
+
+export const extractNames = (text, lang) =>
+  request('/extract-names', {
+    method: 'POST',
+    body: JSON.stringify({ text, lang }),
+  })

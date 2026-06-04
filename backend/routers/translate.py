@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from openai import APIStatusError
 from services.auth import get_current_user
 from services.chunker import split_chunks
-from services.gemini import translate_chunk
+from services.gemini import translate_chunk, extract_names as ai_extract_names
 from services.supabase_client import get_glossary, get_user_credits, deduct_credits, add_credits, get_novel
 
 CHARS_PER_CREDIT = 1000
@@ -82,3 +82,40 @@ async def translate(req: TranslateRequest, user_id: str = Depends(get_current_us
         credits_used=credits_needed,
         credits_remaining=credits_after,
     )
+
+
+class ExtractNamesRequest(BaseModel):
+    text: str
+    lang: str
+
+
+@router.post("/extract-names")
+async def extract_names(req: ExtractNamesRequest, user_id: str = Depends(get_current_user)):
+    if req.lang not in ("EN", "CN"):
+        raise HTTPException(status_code=400, detail="lang ต้องเป็น 'EN' หรือ 'CN'")
+    if not req.text.strip():
+        raise HTTPException(status_code=400, detail="text ว่างเปล่า")
+
+    credits_needed = max(1, math.ceil(len(req.text) / CHARS_PER_CREDIT))
+    remaining = get_user_credits(user_id)
+    if remaining < credits_needed:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Credits ไม่พอ ต้องการ {credits_needed} credit มีแค่ {remaining} credit",
+        )
+
+    credits_after = deduct_credits(user_id, credits_needed)
+    if credits_after == -1:
+        raise HTTPException(status_code=402, detail="Credits ไม่พอ")
+
+    try:
+        names = ai_extract_names(req.text, req.lang)
+    except Exception as e:
+        add_credits(user_id, credits_needed)
+        raise HTTPException(status_code=500, detail=f"เกิดข้อผิดพลาด: {str(e)}")
+
+    return {
+        "names": [{"source_word": n["source"], "suggested_thai": n["thai"]} for n in names],
+        "credits_used": credits_needed,
+        "credits_remaining": credits_after,
+    }

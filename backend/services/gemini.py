@@ -1,4 +1,5 @@
 import os
+import json
 from openai import OpenAI
 
 SYSTEM_PROMPT = """You are an expert Thai novel translator. Your translations read as naturally as if they were originally written in Thai — fluid, emotionally resonant, and true to the author's voice.
@@ -51,3 +52,47 @@ def translate_chunk(
         max_tokens=4096,
     )
     return response.choices[0].message.content.strip()
+
+
+def extract_names(text: str, lang: str) -> list[dict]:
+    """Extract proper nouns and suggest Thai transliterations. Returns [{source, thai}]."""
+    lang_label = "English" if lang == "EN" else "Chinese"
+    prompt = (
+        f"Extract all proper nouns from this {lang_label} text: "
+        f"character names, place names, organization names, and special title terms.\n"
+        f"For each, provide a natural Thai phonetic transliteration.\n\n"
+        f"Return ONLY a valid JSON array, no explanation, no markdown:\n"
+        f'[{{"source": "Leon", "thai": "ลีออน"}}, {{"source": "Zhongzhou", "thai": "จงโจว"}}]\n\n'
+        f"If no proper nouns found, return: []\n\n"
+        f"Text:\n{text}"
+    )
+    response = _client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You extract proper nouns from text and suggest Thai phonetic transliterations. "
+                    "Return only a valid JSON array, nothing else."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.2,
+        max_tokens=1024,
+    )
+    raw = response.choices[0].message.content.strip()
+    # Strip markdown code fences if present
+    if raw.startswith("```"):
+        parts = raw.split("```")
+        raw = parts[1].lstrip("json").strip() if len(parts) > 1 else raw
+    try:
+        result = json.loads(raw)
+        if isinstance(result, list):
+            return [
+                r for r in result
+                if isinstance(r, dict) and "source" in r and "thai" in r
+            ]
+    except (json.JSONDecodeError, ValueError):
+        pass
+    return []

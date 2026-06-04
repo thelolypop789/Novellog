@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getNovels, createNovel, updateNovel, deleteNovel, getGlossary, addGlossary, deleteGlossary } from '../services/api'
+import NameExtractor from './NameExtractor'
 
 const GENRES = [
   { value: '', label: '— ไม่ระบุ —' },
@@ -180,7 +181,7 @@ function NovelStyleEditor({ novel, onSaved }) {
   )
 }
 
-export default function NovelManager({ onNovelsChange }) {
+export default function NovelManager({ onNovelsChange, onCreditUsed }) {
   const [novels, setNovels] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -340,6 +341,14 @@ export default function NovelManager({ onNovelsChange }) {
               {expandedId === novel.id && (
                 <div className="px-4 pb-4 border-t border-gray-100 pt-3 flex flex-col gap-4">
                   <NovelStyleEditor novel={novel} onSaved={handleStyleSaved} />
+                  <div className="border-t border-gray-100 pt-3">
+                    <p className="text-xs font-medium text-gray-500 mb-2">ตรวจหาชื่อจาก Source Text</p>
+                    <NameExtractor
+                      novel={novel}
+                      onAdded={() => {}}
+                      onCreditUsed={onCreditUsed}
+                    />
+                  </div>
                   <div className="border-t border-gray-100 pt-3">
                     <NovelGlossary novel={novel} />
                   </div>
