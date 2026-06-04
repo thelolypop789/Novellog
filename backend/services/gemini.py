@@ -2,9 +2,11 @@ import os
 from openai import OpenAI
 
 SYSTEM_PROMPT = (
-    "คุณคือนักแปลนิยาย แปลเป็นภาษาไทยสำนวนธรรมชาติ\n"
-    "รักษาอารมณ์ต้นฉบับ ห้ามอธิบายหรือเพิ่มเติมใดๆ\n"
-    "ตอบเฉพาะข้อความที่แปลแล้วเท่านั้น"
+    "You are a professional novel translator. "
+    "ALWAYS translate to Thai (ภาษาไทย). "
+    "NEVER output Chinese, English, or any other language.\n"
+    "คุณคือนักแปลนิยายมืออาชีพ แปลเป็นภาษาไทยเท่านั้น ห้ามแปลเป็นภาษาจีนหรือภาษาอื่นเด็ดขาด\n"
+    "รักษาอารมณ์ต้นฉบับ ห้ามอธิบายหรือเพิ่มเติมใดๆ ตอบเฉพาะข้อความที่แปลแล้วเท่านั้น"
 )
 
 _client = OpenAI(
@@ -19,7 +21,8 @@ def translate_chunk(text: str, lang: str, glossary: dict[str, str] | None = None
         pairs = ", ".join(f"{k}={v}" for k, v in glossary.items())
         gloss_str = f"ชื่อ: {pairs}\n"
 
-    prompt = f"{lang}>TH\n{gloss_str}{text}"
+    lang_label = "English" if lang == "EN" else "Chinese"
+    prompt = f"Translate the following {lang_label} text to Thai (ภาษาไทย):\n{gloss_str}{text}"
     response = _client.chat.completions.create(
         model="deepseek-chat",
         messages=[
