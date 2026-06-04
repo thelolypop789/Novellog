@@ -35,20 +35,13 @@ export default function TranslatePanel({ onCreditUsed, novels = [] }) {
       setChunks(data.chunks)
       setCreditsUsed(data.credits_used)
       onCreditUsed?.()
+      // Auto-save — credits already spent
+      saveHistory(lang, input, data.translated).catch(() => {})
+      setSaved(true)
     } catch (e) {
       setError(e.message)
     } finally {
       setLoading(false)
-    }
-  }
-
-  async function handleSave() {
-    if (!output) return
-    try {
-      await saveHistory(lang, input, output)
-      setSaved(true)
-    } catch (e) {
-      setError(e.message)
     }
   }
 
@@ -123,19 +116,15 @@ export default function TranslatePanel({ onCreditUsed, novels = [] }) {
           )}
         </div>
         <div className="flex gap-2 justify-end">
+          {saved && (
+            <span className="text-xs text-green-600 px-2">บันทึกแล้ว ✓</span>
+          )}
           <button
             onClick={handleCopy}
             disabled={!output}
             className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-40 transition-colors"
           >
             {copied ? 'คัดลอกแล้ว ✓' : 'คัดลอก'}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!output || saved}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-40 transition-colors"
-          >
-            {saved ? 'บันทึกแล้ว ✓' : 'บันทึก'}
           </button>
         </div>
       </div>
