@@ -106,7 +106,7 @@ export default function GlossaryManager() {
               key={item.source_word}
               className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm"
             >
-              <span className="text-gray-700 w-32 truncate">{item.source_word}</span>
+              <span className="text-gray-700 w-24 sm:w-32 truncate flex-shrink-0">{item.source_word}</span>
               <span className="text-gray-300">→</span>
               <span className="text-gray-700 flex-1">{item.target_word}</span>
               <button

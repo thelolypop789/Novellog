@@ -68,25 +68,25 @@ function NovelGlossary({ novel }) {
       <p className="text-xs text-gray-400 mb-2">
         Glossary เฉพาะเรื่องนี้ ({novel.lang}) — ใช้ร่วมกับ Global Glossary ตอนแปล
       </p>
-      <div className="flex gap-2 mb-2">
+      <div className="flex flex-col sm:flex-row gap-2 mb-2">
         <input
           value={source}
           onChange={(e) => setSource(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           placeholder="ต้นฉบับ"
-          className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300"
+          className="flex-1 min-w-0 px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300"
         />
         <input
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           placeholder="ภาษาไทย"
-          className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300"
+          className="flex-1 min-w-0 px-2 py-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300"
         />
         <button
           onClick={handleAdd}
           disabled={!source.trim() || !target.trim()}
-          className="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 disabled:opacity-50 transition-colors sm:flex-shrink-0"
         >
           เพิ่ม
         </button>
@@ -103,7 +103,7 @@ function NovelGlossary({ novel }) {
               key={item.source_word}
               className="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded text-xs"
             >
-              <span className="text-gray-700 w-28 truncate">{item.source_word}</span>
+              <span className="text-gray-700 w-20 sm:w-28 truncate flex-shrink-0">{item.source_word}</span>
               <span className="text-gray-300">→</span>
               <span className="text-gray-700 flex-1">{item.target_word}</span>
               <button
@@ -241,18 +241,18 @@ export default function NovelManager({ onNovelsChange, onCreditUsed }) {
       {/* Create form */}
       <div className="flex flex-col gap-2 p-4 border border-gray-200 rounded-lg bg-gray-50">
         <p className="text-xs font-medium text-gray-500 mb-1">เพิ่มนิยายใหม่</p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
             placeholder="ชื่อนิยาย *"
-            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+            className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
           />
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white flex-shrink-0"
           >
             <option value="EN">EN</option>
             <option value="CN">CN</option>
@@ -283,7 +283,7 @@ export default function NovelManager({ onNovelsChange, onCreditUsed }) {
         <button
           onClick={handleCreate}
           disabled={!title.trim() || creating}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors self-end"
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors w-full sm:w-auto sm:self-end"
         >
           {creating ? 'กำลังเพิ่ม...' : 'เพิ่มนิยาย'}
         </button>

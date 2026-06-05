@@ -138,7 +138,7 @@ export default function TranslatePanel({
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`วางข้อความ${lang === 'EN' ? 'ภาษาอังกฤษ' : 'ภาษาจีน'}ที่นี่...\n(Ctrl+Enter เพื่อแปล)`}
-            className="min-h-[260px] p-4 border border-gray-200 rounded-xl resize-none text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono leading-relaxed bg-white"
+            className="min-h-[180px] md:min-h-[260px] p-4 border border-gray-200 rounded-xl resize-none text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono leading-relaxed bg-white"
           />
         </div>
 
@@ -157,7 +157,7 @@ export default function TranslatePanel({
               <span className="text-xs text-indigo-500 font-medium">ใช้ {creditsUsed} credit</span>
             )}
           </div>
-          <div className="min-h-[260px] p-4 border border-gray-200 rounded-xl bg-gray-50 text-sm overflow-y-auto whitespace-pre-wrap leading-relaxed relative">
+          <div className="min-h-[180px] md:min-h-[260px] p-4 border border-gray-200 rounded-xl bg-gray-50 text-sm overflow-y-auto whitespace-pre-wrap leading-relaxed relative">
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
