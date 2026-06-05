@@ -1,11 +1,12 @@
 import math
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from openai import APIStatusError
 from services.auth import get_current_user
 from services.chunker import split_chunks
 from services.gemini import translate_chunk, extract_names as ai_extract_names
 from services.supabase_client import get_glossary, get_user_credits, deduct_credits, add_credits, get_novel
+from services.limiter import limiter
 
 CHARS_PER_CREDIT = 1000
 
@@ -26,7 +27,8 @@ class TranslateResponse(BaseModel):
 
 
 @router.post("/translate", response_model=TranslateResponse)
-async def translate(req: TranslateRequest, user_id: str = Depends(get_current_user)):
+@limiter.limit("20/minute")
+async def translate(request: Request, req: TranslateRequest, user_id: str = Depends(get_current_user)):
     if req.lang not in ("EN", "CN"):
         raise HTTPException(status_code=400, detail="lang ต้องเป็น 'EN' หรือ 'CN'")
     if not req.text.strip():
@@ -89,7 +91,8 @@ class ExtractNamesRequest(BaseModel):
 
 
 @router.post("/extract-names")
-async def extract_names(req: ExtractNamesRequest, user_id: str = Depends(get_current_user)):
+@limiter.limit("10/minute")
+async def extract_names(request: Request, req: ExtractNamesRequest, user_id: str = Depends(get_current_user)):
     if req.lang not in ("EN", "CN"):
         raise HTTPException(status_code=400, detail="lang ต้องเป็น 'EN' หรือ 'CN'")
     if not req.text.strip():
