@@ -22,3 +22,20 @@ app.include_router(history.router)
 @app.get("/")
 def root():
     return {"status": "ok"}
+
+
+@app.get("/diag")
+def diag():
+    import httpx, os, socket
+    result = {}
+    try:
+        result["dns"] = socket.gethostbyname("api.deepseek.com")
+    except Exception as e:
+        result["dns_error"] = f"{type(e).__name__}: {e}"
+    try:
+        r = httpx.get("https://api.deepseek.com/", timeout=10)
+        result["http_status"] = r.status_code
+    except Exception as e:
+        result["http_error"] = f"{type(e).__name__}: {e}"
+    result["has_key"] = bool(os.environ.get("DEEPSEEK_API_KEY"))
+    return result
