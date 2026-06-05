@@ -58,9 +58,9 @@ export default function TranslatePanel({ onCreditUsed, novels = [] }) {
   }
 
   return (
-    <div className="flex gap-4 h-full">
+    <div className="flex flex-col md:flex-row gap-4 h-full">
       {/* Input side */}
-      <div className="flex-1 flex flex-col gap-3">
+      <div className="flex-1 flex flex-col gap-3 min-h-0">
         <div className="flex items-center gap-3 flex-wrap">
           <LanguageSelector value={lang} onChange={handleLangChange} />
           {filteredNovels.length > 0 && (
@@ -98,7 +98,7 @@ export default function TranslatePanel({ onCreditUsed, novels = [] }) {
       </div>
 
       {/* Output side */}
-      <div className="flex-1 flex flex-col gap-3">
+      <div className="flex-1 flex flex-col gap-3 min-h-0">
         <div className="flex items-center justify-between h-[34px]">
           <span className="text-xs text-gray-400">
             {chunks > 0 && `${chunks} chunk${chunks > 1 ? 's' : ''}`}

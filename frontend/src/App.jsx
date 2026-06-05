@@ -6,6 +6,7 @@ import HistoryList from './components/HistoryList'
 import GlossaryManager from './components/GlossaryManager'
 import NovelManager from './components/NovelManager'
 import CreditBadge from './components/CreditBadge'
+import AdminPanel from './components/AdminPanel'
 import { getNovels } from './services/api'
 
 const TABS = [
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'history', label: 'ประวัติ' },
   { id: 'glossary', label: 'Glossary' },
   { id: 'novels', label: 'นิยาย' },
+  { id: 'admin', label: 'Admin' },
 ]
 
 export default function App() {
@@ -62,17 +64,17 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0 flex items-center justify-between">
-        <h1 className="text-base font-bold text-gray-800">
+      <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-2 sm:py-3 flex-shrink-0 flex items-center justify-between gap-2">
+        <h1 className="text-base font-bold text-gray-800 whitespace-nowrap">
           NovelLog{' '}
-          <span className="text-indigo-500 font-normal text-sm">แปลนิยาย EN / CN → TH</span>
+          <span className="text-indigo-500 font-normal text-sm hidden sm:inline">แปลนิยาย EN / CN → TH</span>
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <CreditBadge refreshTrigger={creditRefresh} />
-          <span className="text-xs text-gray-400 hidden sm:block">{user.email}</span>
+          <span className="text-xs text-gray-400 hidden md:block truncate max-w-[160px]">{user.email}</span>
           <button
             onClick={handleLogout}
-            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 border border-gray-200 rounded-md transition-colors"
+            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 border border-gray-200 rounded-md transition-colors whitespace-nowrap"
           >
             ออกจากระบบ
           </button>
@@ -80,13 +82,13 @@ export default function App() {
       </header>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200 px-6 flex-shrink-0">
-        <div className="flex gap-1">
+      <div className="bg-white border-b border-gray-200 px-3 sm:px-6 flex-shrink-0 overflow-x-auto">
+        <div className="flex gap-1 min-w-max">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors
+              className={`px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
                 ${tab === t.id
                   ? 'border-indigo-600 text-indigo-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -99,11 +101,11 @@ export default function App() {
       </div>
 
       {/* Content */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
+      <main className="flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto">
         {tab === 'translate' && (
           <div
-            className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col"
-            style={{ height: 'calc(100vh - 140px)' }}
+            className="bg-white rounded-xl border border-gray-200 p-3 sm:p-6 flex flex-col"
+            style={{ height: 'calc(100vh - 120px)' }}
           >
             <TranslatePanel
               onCreditUsed={() => setCreditRefresh((n) => n + 1)}
@@ -133,6 +135,13 @@ export default function App() {
               onNovelsChange={refreshNovels}
               onCreditUsed={() => setCreditRefresh((n) => n + 1)}
             />
+          </div>
+        )}
+
+        {tab === 'admin' && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="text-sm font-semibold text-gray-600 mb-4">จัดการ Credits</h2>
+            <AdminPanel />
           </div>
         )}
       </main>
