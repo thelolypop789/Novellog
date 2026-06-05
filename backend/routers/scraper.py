@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urljoin, urlparse
 
-import httpx
+from curl_cffi import requests as cf_requests
 from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -38,15 +38,24 @@ CONTENT_SELECTORS = [
 
 def _fetch_html(url: str) -> str:
     try:
-        with httpx.Client(follow_redirects=True, timeout=15, headers=FETCH_HEADERS) as c:
-            r = c.get(url)
-            r.raise_for_status()
+        r = cf_requests.get(
+            url,
+            impersonate="chrome124",   # ใช้ TLS fingerprint ของ Chrome 124
+            headers=FETCH_HEADERS,
+            timeout=20,
+            allow_redirects=True,
+        )
+        r.raise_for_status()
         return r.text
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="เว็บปลายทางตอบช้าเกินไป (timeout 15s)")
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=502, detail=f"เว็บปลายทางตอบกลับ {e.response.status_code}")
+    except cf_requests.errors.RequestsError as e:
+        msg = str(e).lower()
+        if "timeout" in msg:
+            raise HTTPException(status_code=504, detail="เว็บปลายทางตอบช้าเกินไป (timeout 20s)")
+        raise HTTPException(status_code=502, detail=f"ไม่สามารถดึงข้อมูลได้: {e}")
     except Exception as e:
+        code = getattr(getattr(e, "response", None), "status_code", None)
+        if code:
+            raise HTTPException(status_code=502, detail=f"เว็บปลายทางตอบกลับ {code}")
         raise HTTPException(status_code=502, detail=f"ไม่สามารถดึงข้อมูลได้: {e}")
 
 
