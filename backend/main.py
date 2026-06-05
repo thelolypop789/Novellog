@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from services.limiter import limiter
-from routers import translate, history, admin
+from routers import translate, history, admin, scraper
 
 app = FastAPI(title="NovelLog API")
 
@@ -32,6 +32,7 @@ app.add_middleware(
 app.include_router(translate.router)
 app.include_router(history.router)
 app.include_router(admin.router)
+app.include_router(scraper.router)
 
 
 @app.get("/")

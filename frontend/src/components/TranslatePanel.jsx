@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { translate, saveHistory, getHistory } from '../services/api'
+import ChapterPicker from './ChapterPicker'
 
 function StepIndicator({ step }) {
   const steps = ['ใส่ข้อความ', 'AI แปล', 'ผลลัพธ์']
@@ -47,6 +48,8 @@ export default function TranslatePanel({
   const [creditsUsed, setCreditsUsed] = useState(0)
   const [copied, setCopied] = useState(false)
   const [recentHistory, setRecentHistory] = useState([])
+  const [showChapterPicker, setShowChapterPicker] = useState(false)
+  const [chapterTitle, setChapterTitle] = useState('')
 
   const step = output ? 3 : loading ? 2 : 1
   const filteredNovels = novels.filter(n => n.lang === lang)
@@ -128,14 +131,29 @@ export default function TranslatePanel({
         {/* Input */}
         <div className="flex-1 flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-medium text-gray-500">
-              ต้นฉบับ ({lang === 'EN' ? 'English' : 'Chinese'})
-            </span>
-            <span className="text-xs text-gray-400">{input.length.toLocaleString()} ตัวอักษร</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-500">
+                ต้นฉบับ ({lang === 'EN' ? 'English' : 'Chinese'})
+              </span>
+              {chapterTitle && (
+                <span className="text-xs text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded truncate max-w-[140px]">
+                  {chapterTitle}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowChapterPicker(true)}
+                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+              >
+                📚 ดึงจากเว็บ
+              </button>
+              <span className="text-xs text-gray-400">{input.length.toLocaleString()} ตัวอักษร</span>
+            </div>
           </div>
           <textarea
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => { setInput(e.target.value); setChapterTitle('') }}
             onKeyDown={handleKeyDown}
             placeholder={`วางข้อความ${lang === 'EN' ? 'ภาษาอังกฤษ' : 'ภาษาจีน'}ที่นี่...\n(Ctrl+Enter เพื่อแปล)`}
             className="h-[200px] md:h-[260px] lg:h-[320px] p-4 border border-gray-200 rounded-xl resize-none text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono leading-relaxed bg-white overflow-y-auto"
@@ -248,6 +266,19 @@ export default function TranslatePanel({
             ))}
           </div>
         </div>
+      )}
+
+      {showChapterPicker && (
+        <ChapterPicker
+          onLoaded={(text, title) => {
+            setInput(text)
+            setChapterTitle(title)
+            setOutput('')
+            setError('')
+            setCreditsUsed(0)
+          }}
+          onClose={() => setShowChapterPicker(false)}
+        />
       )}
     </div>
   )

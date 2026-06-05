@@ -103,3 +103,15 @@ export const extractNames = (text, lang) =>
     method: 'POST',
     body: JSON.stringify({ text, lang }),
   })
+
+export const scrapeChapters = (url) =>
+  request('/scrape/chapters', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  })
+
+export const scrapeChapterText = (url) =>
+  request('/scrape/chapter-text', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  })
