@@ -13,7 +13,7 @@ const BASE_URL = getBaseUrl()
 
 export default function AdminPanel() {
   const [adminKey, setAdminKey] = useState('')
-  const [userId, setUserId] = useState('')
+  const [email, setEmail] = useState('')
   const [amount, setAmount] = useState(100)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
@@ -24,7 +24,7 @@ export default function AdminPanel() {
     setError('')
     setResult(null)
     try {
-      const res = await fetch(`${BASE_URL}/admin/credits/${userId}`, {
+      const res = await fetch(`${BASE_URL}/admin/lookup?email=${encodeURIComponent(email)}`, {
         headers: { 'x-admin-key': adminKey },
       })
       const data = await res.json()
@@ -45,7 +45,7 @@ export default function AdminPanel() {
       const res = await fetch(`${BASE_URL}/admin/add-credits`, {
         method: 'POST',
         headers: { 'x-admin-key': adminKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, amount: Number(amount) }),
+        body: JSON.stringify({ email, amount: Number(amount) }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || 'Error')
@@ -57,7 +57,7 @@ export default function AdminPanel() {
     }
   }
 
-  const disabled = loading || !adminKey || !userId
+  const disabled = loading || !adminKey || !email
 
   return (
     <div className="max-w-md space-y-5">
@@ -73,13 +73,14 @@ export default function AdminPanel() {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">User ID (UUID)</label>
+        <label className="block text-xs font-medium text-gray-600 mb-1">Email ของ User</label>
         <input
-          type="text"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
+          placeholder="user@example.com"
+          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
         />
       </div>
 
@@ -119,8 +120,8 @@ export default function AdminPanel() {
         <div className="text-sm bg-green-50 px-3 py-2 rounded-lg space-y-1">
           {result.type === 'check' ? (
             <>
-              <div className="text-green-800 font-medium">Credits ปัจจุบัน</div>
-              <div className="text-green-700 font-mono text-lg font-bold">{result.credits}</div>
+              <div className="text-green-800 font-medium">{result.email}</div>
+              <div className="text-green-700">Credits: <span className="font-mono font-bold text-lg">{result.credits}</span></div>
             </>
           ) : (
             <>
