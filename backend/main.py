@@ -39,3 +39,27 @@ def diag():
         result["http_error"] = f"{type(e).__name__}: {e}"
     result["has_key"] = bool(os.environ.get("DEEPSEEK_API_KEY"))
     return result
+
+
+@app.get("/diag2")
+def diag2():
+    import os, traceback
+    from openai import OpenAI
+    try:
+        client = OpenAI(
+            api_key=os.environ["DEEPSEEK_API_KEY"],
+            base_url="https://api.deepseek.com",
+        )
+        r = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[{"role": "user", "content": "hi"}],
+            max_tokens=10,
+        )
+        return {"ok": True, "content": r.choices[0].message.content}
+    except Exception as e:
+        return {
+            "error_type": type(e).__name__,
+            "error_msg": str(e),
+            "error_repr": repr(e),
+            "traceback": traceback.format_exc(),
+        }
