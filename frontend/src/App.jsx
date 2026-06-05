@@ -9,6 +9,7 @@ import GlossaryManager from './components/GlossaryManager'
 import NovelManager from './components/NovelManager'
 import SettingsPage from './components/SettingsPage'
 import CreditBadge from './components/CreditBadge'
+import ReaderPage from './components/ReaderPage'
 import { getNovels } from './services/api'
 
 const PAGE_TITLES = {
@@ -78,6 +79,7 @@ export default function App() {
   const [lang, setLang] = useState('EN')
   const [novelId, setNovelId] = useState(null)
   const [genre, setGenre] = useState('')
+  const [readerContent, setReaderContent] = useState(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -167,6 +169,7 @@ export default function App() {
                 onNovelChange={setNovelId}
                 onCreditUsed={handleCreditUsed}
                 historyRefresh={historyRefresh}
+                onOpenReader={setReaderContent}
               />
             )}
 
@@ -225,6 +228,10 @@ export default function App() {
           ))}
         </nav>
       </div>
+
+      {readerContent && (
+        <ReaderPage content={readerContent} onClose={() => setReaderContent(null)} />
+      )}
     </div>
   )
 }

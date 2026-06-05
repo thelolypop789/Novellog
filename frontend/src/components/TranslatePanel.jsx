@@ -38,7 +38,7 @@ function StepIndicator({ step }) {
 export default function TranslatePanel({
   lang, novelId, genre, novels = [],
   onLangChange, onNovelChange,
-  onCreditUsed, historyRefresh,
+  onCreditUsed, historyRefresh, onOpenReader,
 }) {
   const [input, setInput] = useState('')
   const [output, setOutput] = useState('')
@@ -95,8 +95,8 @@ export default function TranslatePanel({
     <div className="p-4 md:p-6 flex flex-col gap-4">
       <StepIndicator step={step} />
 
-      {/* Mobile-only settings bar */}
-      <div className="flex items-center gap-2 flex-wrap md:hidden">
+      {/* Settings bar — mobile + tablet (hidden on desktop where right panel handles it) */}
+      <div className="flex items-center gap-2 flex-wrap lg:hidden">
         <div className="flex gap-1">
           {['EN', 'CN'].map(l => (
             <button
@@ -138,7 +138,7 @@ export default function TranslatePanel({
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`วางข้อความ${lang === 'EN' ? 'ภาษาอังกฤษ' : 'ภาษาจีน'}ที่นี่...\n(Ctrl+Enter เพื่อแปล)`}
-            className="min-h-[180px] md:min-h-[260px] p-4 border border-gray-200 rounded-xl resize-none text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono leading-relaxed bg-white"
+            className="h-[200px] md:h-[260px] lg:h-[320px] p-4 border border-gray-200 rounded-xl resize-none text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono leading-relaxed bg-white overflow-y-auto"
           />
         </div>
 
@@ -157,7 +157,7 @@ export default function TranslatePanel({
               <span className="text-xs text-indigo-500 font-medium">ใช้ {creditsUsed} credit</span>
             )}
           </div>
-          <div className="min-h-[180px] md:min-h-[260px] p-4 border border-gray-200 rounded-xl bg-gray-50 text-sm overflow-y-auto whitespace-pre-wrap leading-relaxed relative">
+          <div className="h-[200px] md:h-[260px] lg:h-[320px] p-4 border border-gray-200 rounded-xl bg-gray-50 text-sm overflow-y-auto whitespace-pre-wrap leading-relaxed relative">
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
@@ -172,7 +172,13 @@ export default function TranslatePanel({
             )}
           </div>
           {output && (
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => onOpenReader?.(output)}
+                className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 px-3 py-1.5 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors font-medium"
+              >
+                📖 อ่านผล
+              </button>
               <button
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"

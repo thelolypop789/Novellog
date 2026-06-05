@@ -24,7 +24,7 @@ export default function TranslateSettingsPanel({
   }
 
   return (
-    <aside className="hidden md:flex flex-col w-[240px] bg-white border-l border-gray-200 flex-shrink-0 overflow-y-auto">
+    <aside className="hidden lg:flex flex-col w-[240px] bg-white border-l border-gray-200 flex-shrink-0 overflow-y-auto">
       <div className="px-5 py-4 border-b border-gray-100">
         <h3 className="text-sm font-semibold text-gray-700">การตั้งค่าการแปล</h3>
       </div>
