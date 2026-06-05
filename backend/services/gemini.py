@@ -13,7 +13,7 @@ Rules:
 6. Only return the final Thai translation. Do not include any preamble, explanation, or translator's notes."""
 
 _client = OpenAI(
-    api_key=os.environ["DEEPSEEK_API_KEY"],
+    api_key=os.environ["DEEPSEEK_API_KEY"].strip(),
     base_url="https://api.deepseek.com",
 )
 
