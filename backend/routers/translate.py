@@ -67,12 +67,14 @@ async def translate(req: TranslateRequest, user_id: str = Depends(get_current_us
             result = translate_chunk(chunk, req.lang, glossary, genre=novel_genre, style_notes=novel_style)
             translated_parts.append(result)
     except APIStatusError as e:
-        # Refund credits if translation fails
         add_credits(user_id, credits_needed)
         if e.status_code == 402:
             raise HTTPException(status_code=502, detail="DeepSeek credit หมด กรุณาติดต่อผู้ดูแลระบบ")
         raise HTTPException(status_code=500, detail=f"AI API error: {e.message}")
     except Exception as e:
+        import traceback
+        print(f"TRANSLATE ERROR: {type(e).__name__}: {e!r}", flush=True)
+        traceback.print_exc()
         add_credits(user_id, credits_needed)
         raise HTTPException(status_code=500, detail=f"เกิดข้อผิดพลาด: {str(e)}")
 
