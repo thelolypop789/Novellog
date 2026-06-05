@@ -47,10 +47,10 @@ async function request(path, options = {}) {
   return res.json()
 }
 
-export const translate = (text, lang, novelId = null) =>
+export const translate = (text, lang, novelId = null, genre = null) =>
   request('/translate', {
     method: 'POST',
-    body: JSON.stringify({ text, lang, novel_id: novelId }),
+    body: JSON.stringify({ text, lang, novel_id: novelId, genre }),
   })
 
 export const getHistory = () => request('/history')

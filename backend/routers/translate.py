@@ -17,6 +17,7 @@ class TranslateRequest(BaseModel):
     text: str
     lang: str  # 'EN' or 'CN'
     novel_id: str | None = None
+    genre: str | None = None  # fallback tone when no novel selected
 
 
 class TranslateResponse(BaseModel):
@@ -52,12 +53,12 @@ async def translate(request: Request, req: TranslateRequest, user_id: str = Depe
             detail=f"Credits ไม่พอ (concurrent use detected) ต้องการ {credits_needed} credit",
         )
 
-    novel_genre = None
+    novel_genre = req.genre or None
     novel_style = None
     if req.novel_id:
         novel = get_novel(user_id, req.novel_id)
         if novel:
-            novel_genre = novel.get("genre")
+            novel_genre = novel.get("genre") or req.genre or None
             novel_style = novel.get("style_notes")
 
     glossary = get_glossary(user_id, req.lang, req.novel_id)
