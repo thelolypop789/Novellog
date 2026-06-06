@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { extractNames, getGlossary, addGlossary } from '../services/api'
 
 export default function GlossaryPreviewModal({ text, lang, novelId, onProceed, onCreditUsed }) {
@@ -57,8 +58,8 @@ export default function GlossaryPreviewModal({ text, lang, novelId, onProceed, o
     onProceed()
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/40 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/40 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh]">
 
         {/* Header */}
@@ -176,6 +177,7 @@ export default function GlossaryPreviewModal({ text, lang, novelId, onProceed, o
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
