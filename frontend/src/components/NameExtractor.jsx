@@ -117,7 +117,8 @@ export default function NameExtractor({ novel, onAdded, onCreditUsed }) {
                   }
                   className="w-3.5 h-3.5 accent-indigo-600 flex-shrink-0"
                 />
-                <span className="text-gray-700 w-20 sm:w-28 truncate flex-shrink-0">{n.source_word}</span>
+                <span className="text-[9px] text-gray-400 flex-shrink-0 w-5 text-center">{n.type === 'term' ? '📚' : '👤'}</span>
+                <span className="text-gray-700 w-20 sm:w-24 truncate flex-shrink-0">{n.source_word}</span>
                 <span className="text-gray-300 flex-shrink-0">→</span>
                 <input
                   value={edited[n.source_word] ?? n.suggested_thai}

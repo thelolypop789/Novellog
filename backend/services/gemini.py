@@ -55,15 +55,19 @@ def translate_chunk(
 
 
 def extract_names(text: str, lang: str) -> list[dict]:
-    """Extract proper nouns and suggest Thai transliterations. Returns [{source, thai}]."""
+    """Extract proper nouns and special terms. Returns [{source, thai, type}]."""
     lang_label = "English" if lang == "EN" else "Chinese"
     prompt = (
-        f"Extract all proper nouns from this {lang_label} text: "
-        f"character names, place names, organization names, and special title terms.\n"
-        f"For each, provide a natural Thai phonetic transliteration.\n\n"
+        f"From this {lang_label} novel text, extract two categories:\n"
+        f"1. Proper nouns (type: 'name'): character names, place names, organization names, honorifics/titles\n"
+        f"2. Special terms (type: 'term'): cultivation realms/stages, techniques/skills, spells, "
+        f"   artifact/weapon names, pills/items, world-specific concepts that need consistent translation\n\n"
+        f"For each item provide a natural Thai equivalent "
+        f"(phonetic transliteration for names; translated or transliterated for terms).\n\n"
         f"Return ONLY a valid JSON array, no explanation, no markdown:\n"
-        f'[{{"source": "Leon", "thai": "ลีออน"}}, {{"source": "Zhongzhou", "thai": "จงโจว"}}]\n\n'
-        f"If no proper nouns found, return: []\n\n"
+        f'[{{"source": "Leon", "thai": "ลีออน", "type": "name"}}, '
+        f'{{"source": "Golden Core", "thai": "แก่นทอง", "type": "term"}}]\n\n'
+        f"If nothing found, return: []\n\n"
         f"Text:\n{text}"
     )
     response = _client.chat.completions.create(
@@ -72,7 +76,9 @@ def extract_names(text: str, lang: str) -> list[dict]:
             {
                 "role": "system",
                 "content": (
-                    "You extract proper nouns from text and suggest Thai phonetic transliterations. "
+                    "You extract proper nouns and domain-specific terms from novel text, "
+                    "then suggest Thai translations or phonetic transliterations. "
+                    "Categorize each as 'name' (proper noun) or 'term' (special concept/skill/item). "
                     "Return only a valid JSON array, nothing else."
                 ),
             },
@@ -82,7 +88,6 @@ def extract_names(text: str, lang: str) -> list[dict]:
         max_tokens=1024,
     )
     raw = response.choices[0].message.content.strip()
-    # Strip markdown code fences if present
     if raw.startswith("```"):
         parts = raw.split("```")
         raw = parts[1].lstrip("json").strip() if len(parts) > 1 else raw

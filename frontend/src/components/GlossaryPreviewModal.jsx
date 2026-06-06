@@ -115,7 +115,8 @@ export default function GlossaryPreviewModal({ text, lang, novelId, onProceed, o
                               onChange={e => setChecked(prev => ({ ...prev, [n.source_word]: e.target.checked }))}
                               className="w-3.5 h-3.5 accent-indigo-600 flex-shrink-0 cursor-pointer"
                             />
-                            <span className="text-gray-700 w-28 truncate flex-shrink-0 font-medium">{n.source_word}</span>
+                            <span className="text-[9px] text-gray-400 flex-shrink-0 w-6 text-center">{n.type === 'term' ? '📚' : '👤'}</span>
+                            <span className="text-gray-700 w-24 truncate flex-shrink-0 font-medium">{n.source_word}</span>
                             <span className="text-gray-300 flex-shrink-0">→</span>
                             <input
                               value={edited[n.source_word] ?? ''}

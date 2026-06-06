@@ -118,7 +118,7 @@ async def extract_names(request: Request, req: ExtractNamesRequest, user_id: str
         raise HTTPException(status_code=500, detail=f"เกิดข้อผิดพลาด: {str(e)}")
 
     return {
-        "names": [{"source_word": n["source"], "suggested_thai": n["thai"]} for n in names],
+        "names": [{"source_word": n["source"], "suggested_thai": n["thai"], "type": n.get("type", "name")} for n in names],
         "credits_used": credits_needed,
         "credits_remaining": credits_after,
     }
