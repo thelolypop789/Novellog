@@ -10,6 +10,7 @@ from services.supabase_client import get_glossary, get_user_credits, deduct_cred
 from services.limiter import limiter
 
 CHARS_PER_CREDIT = 1000
+MAX_TEXT_CHARS = 30_000  # 30 credits, ~20 parallel chunks max
 
 router = APIRouter()
 
@@ -35,6 +36,8 @@ async def translate(request: Request, req: TranslateRequest, user_id: str = Depe
         raise HTTPException(status_code=400, detail="lang ต้องเป็น 'EN' หรือ 'CN'")
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="text ว่างเปล่า")
+    if len(req.text) > MAX_TEXT_CHARS:
+        raise HTTPException(status_code=400, detail=f"ข้อความยาวเกิน {MAX_TEXT_CHARS:,} ตัวอักษร (ส่งมา {len(req.text):,})")
 
     credits_needed = math.ceil(len(req.text) / CHARS_PER_CREDIT)
 

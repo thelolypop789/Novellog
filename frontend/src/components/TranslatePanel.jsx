@@ -40,7 +40,7 @@ function StepIndicator({ step }) {
 export default function TranslatePanel({
   lang, novelId, genre, novels = [],
   onLangChange, onNovelChange,
-  onCreditUsed, historyRefresh, onOpenReader,
+  onCreditUsed, onTranslated, historyRefresh, onOpenReader,
 }) {
   const [input, setInput] = useState('')
   const [output, setOutput] = useState('')
@@ -80,7 +80,7 @@ export default function TranslatePanel({
       const data = await translate(input, lang, novelId, genre || null)
       setOutput(data.translated)
       setCreditsUsed(data.credits_used)
-      onCreditUsed?.()
+      onTranslated?.()
       saveHistory(lang, input, data.translated, novelId).catch(() => {})
     } catch (e) {
       setError(e.message)

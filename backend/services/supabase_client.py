@@ -35,8 +35,8 @@ def save_translation(
         data["novel_id"] = novel_id
     try:
         get_service_client().table("translations").insert(data).execute()
-    except Exception:
-        if novel_id:
+    except Exception as e:
+        if novel_id and "column" in str(e).lower():
             data.pop("novel_id")
             get_service_client().table("translations").insert(data).execute()
         else:
@@ -107,37 +107,30 @@ def get_novel_glossary_only(user_id: str, lang: str, novel_id: str) -> dict[str,
 def upsert_glossary(
     user_id: str, source_word: str, target_word: str, lang: str, novel_id: str | None = None
 ) -> None:
-    db = get_service_client()
-    query = (
-        db.table("glossary")
-        .select("source_word")
-        .eq("user_id", user_id)
-        .eq("source_word", source_word)
-        .eq("lang", lang)
-    )
-    query = query.eq("novel_id", novel_id) if novel_id else query.is_("novel_id", None)
-    existing = query.execute()
-
-    if existing.data:
-        upd = (
-            db.table("glossary")
-            .update({"target_word": target_word})
-            .eq("user_id", user_id)
-            .eq("source_word", source_word)
-            .eq("lang", lang)
-        )
-        upd = upd.eq("novel_id", novel_id) if novel_id else upd.is_("novel_id", None)
-        upd.execute()
-    else:
-        data: dict = {
-            "user_id": user_id,
-            "source_word": source_word,
-            "target_word": target_word,
-            "lang": lang,
-        }
-        if novel_id:
-            data["novel_id"] = novel_id
-        db.table("glossary").insert(data).execute()
+    data: dict = {
+        "user_id": user_id,
+        "source_word": source_word,
+        "target_word": target_word,
+        "lang": lang,
+    }
+    if novel_id:
+        data["novel_id"] = novel_id
+    try:
+        get_service_client().table("glossary").upsert(
+            data, on_conflict="user_id,source_word,lang,novel_id"
+        ).execute()
+    except Exception:
+        # Fallback: manual select → update/insert if table lacks the unique constraint
+        db = get_service_client()
+        q = db.table("glossary").select("source_word").eq("user_id", user_id).eq("source_word", source_word).eq("lang", lang)
+        q = q.eq("novel_id", novel_id) if novel_id else q.is_("novel_id", None)
+        existing = q.execute()
+        if existing.data:
+            upd = db.table("glossary").update({"target_word": target_word}).eq("user_id", user_id).eq("source_word", source_word).eq("lang", lang)
+            upd = upd.eq("novel_id", novel_id) if novel_id else upd.is_("novel_id", None)
+            upd.execute()
+        else:
+            db.table("glossary").insert(data).execute()
 
 
 def delete_glossary(user_id: str, source_word: str, lang: str, novel_id: str | None = None) -> None:

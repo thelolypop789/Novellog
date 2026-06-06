@@ -104,6 +104,10 @@ export default function App() {
 
   function handleCreditUsed() {
     setCreditRefresh(n => n + 1)
+  }
+
+  function handleTranslated() {
+    setCreditRefresh(n => n + 1)
     setHistoryRefresh(n => n + 1)
   }
 
@@ -168,6 +172,7 @@ export default function App() {
                 onLangChange={handleLangChange}
                 onNovelChange={setNovelId}
                 onCreditUsed={handleCreditUsed}
+                onTranslated={handleTranslated}
                 historyRefresh={historyRefresh}
                 onOpenReader={setReaderContent}
               />
