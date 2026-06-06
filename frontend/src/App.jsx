@@ -176,7 +176,7 @@ export default function App() {
             {page === 'history' && (
               <div className="p-4 md:p-6 max-w-3xl">
                 <h2 className="text-sm font-semibold text-gray-600 mb-4">ประวัติการแปล</h2>
-                <HistoryList />
+                <HistoryList novels={novels} />
               </div>
             )}
 
@@ -188,7 +188,7 @@ export default function App() {
 
             {page === 'glossary' && (
               <div className="p-4 md:p-6">
-                <GlossaryManager />
+                <GlossaryManager novels={novels} />
               </div>
             )}
 

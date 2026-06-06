@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { getGlossary, addGlossary, deleteGlossary } from '../services/api'
 
-export default function GlossaryManager() {
+export default function GlossaryManager({ novels = [] }) {
   const [lang, setLang] = useState('EN')
+  const [novelId, setNovelId] = useState(null)   // null = global
   const [items, setItems] = useState([])
   const [source, setSource] = useState('')
   const [target, setTarget] = useState('')
@@ -13,26 +14,38 @@ export default function GlossaryManager() {
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkResult, setBulkResult] = useState('')
 
+  const filteredNovels = novels.filter(n => n.lang === lang)
+
+  useEffect(() => {
+    // When lang changes, reset novel selection if current novel doesn't match lang
+    setNovelId(prev => {
+      const still = filteredNovels.find(n => n.id === prev)
+      return still ? prev : null
+    })
+  }, [lang]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     setLoading(true)
     setError('')
-    getGlossary(lang)
+    const fetchFn = novelId
+      ? getGlossary(lang, novelId)   // novel-specific only
+      : getGlossary(lang)            // global
+    fetchFn
       .then(setItems)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [lang])
+  }, [lang, novelId])
 
   async function handleAdd() {
     if (!source.trim() || !target.trim()) return
     try {
-      await addGlossary(source.trim(), target.trim(), lang)
+      await addGlossary(source.trim(), target.trim(), lang, novelId)
       setItems((prev) => {
         const exists = prev.find((i) => i.source_word === source.trim())
-        if (exists) {
+        if (exists)
           return prev.map((i) =>
             i.source_word === source.trim() ? { ...i, target_word: target.trim() } : i
           )
-        }
         return [...prev, { source_word: source.trim(), target_word: target.trim() }]
       })
       setSource('')
@@ -44,15 +57,11 @@ export default function GlossaryManager() {
 
   async function handleDelete(sourceWord) {
     try {
-      await deleteGlossary(lang, sourceWord)
+      await deleteGlossary(lang, sourceWord, novelId)
       setItems((prev) => prev.filter((i) => i.source_word !== sourceWord))
     } catch (e) {
       setError(e.message)
     }
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === 'Enter') handleAdd()
   }
 
   async function handleBulkImport() {
@@ -77,7 +86,7 @@ export default function GlossaryManager() {
     let failed = 0
     for (const { src, tgt } of pairs) {
       try {
-        await addGlossary(src, tgt, lang)
+        await addGlossary(src, tgt, lang, novelId)
         setItems(prev => {
           const exists = prev.find(i => i.source_word === src)
           if (exists) return prev.map(i => i.source_word === src ? { ...i, target_word: tgt } : i)
@@ -93,20 +102,44 @@ export default function GlossaryManager() {
     if (!failed) { setBulkText(''); setShowBulk(false) }
   }
 
+  const selectedNovelTitle = novelId ? filteredNovels.find(n => n.id === novelId)?.title : null
+
   return (
     <div className="flex flex-col gap-4 max-w-lg">
-      {/* Lang tabs */}
-      <div className="flex gap-2">
-        {['EN', 'CN'].map((l) => (
-          <button
-            key={l}
-            onClick={() => setLang(l)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
-              ${lang === l ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+      {/* Lang + Novel selector */}
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          {['EN', 'CN'].map((l) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
+                ${lang === l ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <span className="text-xs text-gray-400 flex-shrink-0">ขอบเขต:</span>
+          <select
+            value={novelId ?? ''}
+            onChange={e => setNovelId(e.target.value || null)}
+            className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"
           >
-            {l}
-          </button>
-        ))}
+            <option value="">🌐 Global (ทุกนิยาย)</option>
+            {filteredNovels.map(n => (
+              <option key={n.id} value={n.id}>📖 {n.title}</option>
+            ))}
+          </select>
+        </div>
+
+        {novelId && (
+          <p className="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
+            แสดง Glossary เฉพาะ "{selectedNovelTitle}" — ไม่รวม Global
+          </p>
+        )}
       </div>
 
       {/* Add form */}
@@ -114,14 +147,14 @@ export default function GlossaryManager() {
         <input
           value={source}
           onChange={(e) => setSource(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           placeholder="ต้นฉบับ (เช่น Leon)"
           className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
         />
         <input
           value={target}
           onChange={(e) => setTarget(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           placeholder="ภาษาไทย (เช่น ลีออน)"
           className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
         />
@@ -134,7 +167,7 @@ export default function GlossaryManager() {
         </button>
       </div>
 
-      {/* Bulk import toggle */}
+      {/* Bulk import */}
       <div>
         <button
           onClick={() => { setShowBulk(v => !v); setBulkResult('') }}
@@ -145,7 +178,10 @@ export default function GlossaryManager() {
 
         {showBulk && (
           <div className="mt-2 flex flex-col gap-2">
-            <p className="text-xs text-gray-500">วางรายการในรูปแบบ <code className="bg-gray-100 px-1 rounded">ต้นฉบับ=ภาษาไทย</code> หนึ่งรายการต่อบรรทัด</p>
+            <p className="text-xs text-gray-500">
+              วางในรูปแบบ <code className="bg-gray-100 px-1 rounded">ต้นฉบับ=ภาษาไทย</code> หนึ่งรายการต่อบรรทัด
+              {novelId && <span className="text-indigo-600"> · จะเพิ่มใน "{selectedNovelTitle}"</span>}
+            </p>
             <textarea
               value={bulkText}
               onChange={e => setBulkText(e.target.value)}
@@ -173,7 +209,9 @@ export default function GlossaryManager() {
       {loading ? (
         <div className="text-sm text-gray-400">กำลังโหลด...</div>
       ) : items.length === 0 ? (
-        <div className="text-sm text-gray-400">ยังไม่มี Glossary สำหรับ {lang}</div>
+        <div className="text-sm text-gray-400">
+          {novelId ? `ยังไม่มี Glossary เฉพาะเรื่อง "${selectedNovelTitle}"` : `ยังไม่มี Global Glossary สำหรับ ${lang}`}
+        </div>
       ) : (
         <div className="flex flex-col gap-1">
           {items.map((item) => (

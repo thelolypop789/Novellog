@@ -22,6 +22,7 @@ class SaveTranslationRequest(BaseModel):
     lang: str
     original: str
     translated: str
+    novel_id: str | None = None
 
 
 class GlossaryItem(BaseModel):
@@ -51,7 +52,7 @@ async def list_history(user_id: str = Depends(get_current_user)):
 
 @router.post("/history")
 async def add_history(req: SaveTranslationRequest, user_id: str = Depends(get_current_user)):
-    save_translation(user_id, req.lang, req.original, req.translated)
+    save_translation(user_id, req.lang, req.original, req.translated, req.novel_id)
     return {"status": "ok"}
 
 

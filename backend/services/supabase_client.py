@@ -27,10 +27,20 @@ def get_service_client() -> Client:
 
 # --- Translations ---
 
-def save_translation(user_id: str, lang: str, original: str, translated: str) -> None:
-    get_service_client().table("translations").insert(
-        {"user_id": user_id, "source_lang": lang, "original": original, "translated": translated}
-    ).execute()
+def save_translation(
+    user_id: str, lang: str, original: str, translated: str, novel_id: str | None = None
+) -> None:
+    data: dict = {"user_id": user_id, "source_lang": lang, "original": original, "translated": translated}
+    if novel_id:
+        data["novel_id"] = novel_id
+    try:
+        get_service_client().table("translations").insert(data).execute()
+    except Exception:
+        if novel_id:
+            data.pop("novel_id")
+            get_service_client().table("translations").insert(data).execute()
+        else:
+            raise
 
 
 def get_translations(user_id: str, limit: int = 50) -> list[dict]:

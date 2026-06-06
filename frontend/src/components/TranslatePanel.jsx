@@ -74,7 +74,7 @@ export default function TranslatePanel({
       setOutput(data.translated)
       setCreditsUsed(data.credits_used)
       onCreditUsed?.()
-      saveHistory(lang, input, data.translated).catch(() => {})
+      saveHistory(lang, input, data.translated, novelId).catch(() => {})
     } catch (e) {
       setError(e.message)
     } finally {

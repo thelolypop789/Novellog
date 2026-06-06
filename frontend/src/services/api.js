@@ -55,10 +55,10 @@ export const translate = (text, lang, novelId = null, genre = null) =>
 
 export const getHistory = () => request('/history')
 
-export const saveHistory = (lang, original, translated) =>
+export const saveHistory = (lang, original, translated, novelId = null) =>
   request('/history', {
     method: 'POST',
-    body: JSON.stringify({ lang, original, translated }),
+    body: JSON.stringify({ lang, original, translated, novel_id: novelId }),
   })
 
 export const getGlossary = (lang, novelId = null) => {
