@@ -13,6 +13,8 @@ export default function GlossaryManager({ novels = [] }) {
   const [bulkText, setBulkText] = useState('')
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkResult, setBulkResult] = useState('')
+  const [editingWord, setEditingWord] = useState(null)
+  const [editingValue, setEditingValue] = useState('')
 
   const filteredNovels = novels.filter(n => n.lang === lang)
 
@@ -59,6 +61,22 @@ export default function GlossaryManager({ novels = [] }) {
     try {
       await deleteGlossary(lang, sourceWord, novelId)
       setItems((prev) => prev.filter((i) => i.source_word !== sourceWord))
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  function startEdit(item) {
+    setEditingWord(item.source_word)
+    setEditingValue(item.target_word)
+  }
+
+  async function handleSaveEdit(sourceWord) {
+    if (!editingValue.trim()) return
+    try {
+      await addGlossary(sourceWord, editingValue.trim(), lang, novelId)
+      setItems(prev => prev.map(i => i.source_word === sourceWord ? { ...i, target_word: editingValue.trim() } : i))
+      setEditingWord(null)
     } catch (e) {
       setError(e.message)
     }
@@ -214,22 +232,60 @@ export default function GlossaryManager({ novels = [] }) {
         </div>
       ) : (
         <div className="flex flex-col gap-1">
-          {items.map((item) => (
-            <div
-              key={item.source_word}
-              className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm"
-            >
-              <span className="text-gray-700 w-24 sm:w-32 truncate flex-shrink-0">{item.source_word}</span>
-              <span className="text-gray-300">→</span>
-              <span className="text-gray-700 flex-1">{item.target_word}</span>
-              <button
-                onClick={() => handleDelete(item.source_word)}
-                className="text-red-400 hover:text-red-600 text-xs px-1 transition-colors"
+          {items.map((item) => {
+            const isEditing = editingWord === item.source_word
+            return (
+              <div
+                key={item.source_word}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${isEditing ? 'bg-indigo-50 border border-indigo-200' : 'bg-gray-50'}`}
               >
-                ลบ
-              </button>
-            </div>
-          ))}
+                <span className="text-gray-700 w-24 sm:w-32 truncate flex-shrink-0 font-medium">{item.source_word}</span>
+                <span className="text-gray-300 flex-shrink-0">→</span>
+                {isEditing ? (
+                  <>
+                    <input
+                      autoFocus
+                      value={editingValue}
+                      onChange={e => setEditingValue(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleSaveEdit(item.source_word)
+                        if (e.key === 'Escape') setEditingWord(null)
+                      }}
+                      className="flex-1 px-2 py-0.5 border border-indigo-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                    />
+                    <button
+                      onClick={() => handleSaveEdit(item.source_word)}
+                      className="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex-shrink-0 px-1"
+                    >
+                      บันทึก
+                    </button>
+                    <button
+                      onClick={() => setEditingWord(null)}
+                      className="text-gray-400 hover:text-gray-600 text-xs flex-shrink-0 px-1"
+                    >
+                      ยกเลิก
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-gray-700 flex-1 truncate">{item.target_word}</span>
+                    <button
+                      onClick={() => startEdit(item)}
+                      className="text-indigo-400 hover:text-indigo-600 text-xs px-1 transition-colors flex-shrink-0"
+                    >
+                      แก้ไข
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.source_word)}
+                      className="text-red-400 hover:text-red-600 text-xs px-1 transition-colors flex-shrink-0"
+                    >
+                      ลบ
+                    </button>
+                  </>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
