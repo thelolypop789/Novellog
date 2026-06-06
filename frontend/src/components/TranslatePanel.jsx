@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { translate, saveHistory, getHistory } from '../services/api'
 import ChapterPicker from './ChapterPicker'
+import GlossaryPreviewModal from './GlossaryPreviewModal'
 
 function StepIndicator({ step }) {
   const steps = ['ใส่ข้อความ', 'AI แปล', 'ผลลัพธ์']
@@ -50,6 +51,7 @@ export default function TranslatePanel({
   const [recentHistory, setRecentHistory] = useState([])
   const [showChapterPicker, setShowChapterPicker] = useState(false)
   const [chapterTitle, setChapterTitle] = useState('')
+  const [showGlossaryPreview, setShowGlossaryPreview] = useState(false)
 
   const step = output ? 3 : loading ? 2 : 1
   const filteredNovels = novels.filter(n => n.lang === lang)
@@ -63,8 +65,13 @@ export default function TranslatePanel({
     onNovelChange?.(null)
   }
 
-  async function handleTranslate() {
+  function handleTranslateClick() {
     if (!input.trim() || loading) return
+    setShowGlossaryPreview(true)
+  }
+
+  async function doTranslate() {
+    setShowGlossaryPreview(false)
     setLoading(true)
     setError('')
     setOutput('')
@@ -89,7 +96,7 @@ export default function TranslatePanel({
   }
 
   function handleKeyDown(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleTranslate()
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleTranslateClick()
   }
 
   const creditsNeeded = Math.ceil(input.length / 1000)
@@ -216,7 +223,7 @@ export default function TranslatePanel({
 
       {/* Translate button */}
       <button
-        onClick={handleTranslate}
+        onClick={handleTranslateClick}
         disabled={loading || !input.trim()}
         className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-100 disabled:text-gray-400 text-white text-base font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
       >
@@ -278,6 +285,16 @@ export default function TranslatePanel({
             setCreditsUsed(0)
           }}
           onClose={() => setShowChapterPicker(false)}
+        />
+      )}
+
+      {showGlossaryPreview && (
+        <GlossaryPreviewModal
+          text={input}
+          lang={lang}
+          novelId={novelId}
+          onProceed={doTranslate}
+          onCreditUsed={onCreditUsed}
         />
       )}
     </div>
