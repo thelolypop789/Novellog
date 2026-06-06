@@ -19,6 +19,9 @@ def split_chunks(text: str, max_chars: int = 1500) -> list[str]:
                 break_long_words=False,
                 break_on_hyphens=False,
             )
+            # textwrap cannot split CJK text (no spaces) — hard-split by character count
+            if not sub_chunks or any(len(c) > max_chars for c in sub_chunks):
+                sub_chunks = [para[i : i + max_chars] for i in range(0, len(para), max_chars)]
             chunks.extend(sub_chunks)
         elif len(current) + len(para) + 1 > max_chars:
             if current.strip():

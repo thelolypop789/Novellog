@@ -1,3 +1,4 @@
+import asyncio
 import math
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
@@ -64,11 +65,27 @@ async def translate(request: Request, req: TranslateRequest, user_id: str = Depe
     glossary = get_glossary(user_id, req.lang, req.novel_id)
     chunks = split_chunks(req.text)
 
+    def _relevant_glossary(text: str) -> dict[str, str]:
+        if not glossary:
+            return {}
+        text_lower = text.lower()
+        return {k: v for k, v in glossary.items() if k.lower() in text_lower}
+
+    async def _translate_one(chunk: str, prev_tail: str) -> str:
+        return await asyncio.to_thread(
+            translate_chunk,
+            chunk, req.lang, _relevant_glossary(chunk),
+            novel_genre, novel_style, prev_tail,
+        )
+
+    tasks = [
+        _translate_one(chunk, chunks[i - 1][-150:] if i > 0 else "")
+        for i, chunk in enumerate(chunks)
+    ]
+
     translated_parts: list[str] = []
     try:
-        for chunk in chunks:
-            result = translate_chunk(chunk, req.lang, glossary, genre=novel_genre, style_notes=novel_style)
-            translated_parts.append(result)
+        translated_parts = list(await asyncio.gather(*tasks))
     except APIStatusError as e:
         add_credits(user_id, credits_needed)
         if e.status_code == 402:

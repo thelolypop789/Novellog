@@ -81,9 +81,9 @@ def test_one_over_boundary_with_spaces():
 
 
 def test_one_over_boundary_no_spaces():
-    # break_long_words=False: a single "word" longer than max_chars stays as-is
-    # This is documented behavior — chunker won't break inside a word
+    # CJK/no-space text longer than max_chars must be hard-split at character boundary
     text = "A" * 1501
     result = split_chunks(text, max_chars=1500)
-    assert len(result) == 1
-    assert len(result[0]) == 1501
+    assert len(result) == 2
+    assert len(result[0]) == 1500
+    assert len(result[1]) == 1

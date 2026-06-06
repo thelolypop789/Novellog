@@ -24,6 +24,7 @@ def translate_chunk(
     glossary: dict[str, str] | None = None,
     genre: str | None = None,
     style_notes: str | None = None,
+    prev_context: str = "",
 ) -> str:
     context_parts = []
 
@@ -40,7 +41,15 @@ def translate_chunk(
         context_str += "\n\n"
 
     lang_label = "English" if lang == "EN" else "Chinese"
-    prompt = f"{context_str}Translate the following {lang_label} text to Thai (ภาษาไทย):\n{text}"
+
+    if prev_context:
+        prompt = (
+            f"{context_str}"
+            f"[Preceding source text for context — do NOT translate this part]:\n{prev_context}\n\n"
+            f"Translate the following {lang_label} text to Thai (ภาษาไทย):\n{text}"
+        )
+    else:
+        prompt = f"{context_str}Translate the following {lang_label} text to Thai (ภาษาไทย):\n{text}"
 
     response = _client.chat.completions.create(
         model="deepseek-chat",
@@ -48,7 +57,7 @@ def translate_chunk(
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
         ],
-        temperature=1.0,
+        temperature=0.3,
         max_tokens=4096,
     )
     return response.choices[0].message.content.strip()
