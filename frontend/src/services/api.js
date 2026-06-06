@@ -55,6 +55,8 @@ export const translate = (text, lang, novelId = null, genre = null) =>
 
 export const getHistory = () => request('/history')
 
+export const deleteHistory = (id) => request(`/history/${id}`, { method: 'DELETE' })
+
 export const saveHistory = (lang, original, translated, novelId = null) =>
   request('/history', {
     method: 'POST',

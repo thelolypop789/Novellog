@@ -4,6 +4,7 @@ from services.auth import get_current_user
 from services.supabase_client import (
     save_translation,
     get_translations,
+    delete_translation,
     get_glossary,
     get_novel_glossary_only,
     upsert_glossary,
@@ -53,6 +54,12 @@ async def list_history(user_id: str = Depends(get_current_user)):
 @router.post("/history")
 async def add_history(req: SaveTranslationRequest, user_id: str = Depends(get_current_user)):
     save_translation(user_id, req.lang, req.original, req.translated, req.novel_id)
+    return {"status": "ok"}
+
+
+@router.delete("/history/{translation_id}")
+async def remove_history(translation_id: str, user_id: str = Depends(get_current_user)):
+    delete_translation(user_id, translation_id)
     return {"status": "ok"}
 
 

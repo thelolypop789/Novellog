@@ -56,6 +56,10 @@ def get_translations(user_id: str, limit: int = 50) -> list[dict]:
     return res.data
 
 
+def delete_translation(user_id: str, translation_id: str) -> None:
+    get_service_client().table("translations").delete().eq("user_id", user_id).eq("id", translation_id).execute()
+
+
 # --- Glossary ---
 
 def get_glossary(user_id: str, lang: str, novel_id: str | None = None) -> dict[str, str]:
