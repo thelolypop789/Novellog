@@ -86,16 +86,17 @@ export default function HistoryList({ novels = [] }) {
 
   function openInReader(items) {
     if (!items.length) return
-    const sections = items.map(item => {
+    const sorted = [...items].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    const sections = sorted.map(item => {
       const date = new Date(item.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
       const novelName = item.novel_id ? novelMap[item.novel_id] : ''
       const meta = [date, item.source_lang + ' → TH', novelName].filter(Boolean).join(' · ')
       return `── ${meta} ──\n\n${item.translated}`
     })
     const content = sections.join('\n\n' + '─'.repeat(32) + '\n\n')
-    const title = items.length === 1
-      ? new Date(items[0].created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
-      : `${items.length} ตอนที่เลือก`
+    const title = sorted.length === 1
+      ? new Date(sorted[0].created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+      : `${sorted.length} ตอนที่เลือก`
     setReaderTitle(title)
     setReaderContent(content)
   }
