@@ -86,7 +86,13 @@ export default function HistoryList({ novels = [] }) {
 
   function openInReader(items) {
     if (!items.length) return
-    const content = items.map(item => item.translated).join('\n\n─────\n\n')
+    const sections = items.map(item => {
+      const date = new Date(item.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+      const novelName = item.novel_id ? novelMap[item.novel_id] : ''
+      const meta = [date, item.source_lang + ' → TH', novelName].filter(Boolean).join(' · ')
+      return `── ${meta} ──\n\n${item.translated}`
+    })
+    const content = sections.join('\n\n' + '─'.repeat(32) + '\n\n')
     const title = items.length === 1
       ? new Date(items[0].created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
       : `${items.length} ตอนที่เลือก`
@@ -148,9 +154,9 @@ export default function HistoryList({ novels = [] }) {
           <button
             onClick={() => openInReader(exportItems)}
             disabled={filtered.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 rounded-lg text-xs text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 transition-colors font-medium"
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
           >
-            📖 เปิดอ่าน {someChecked ? `(${selectedInView.length} ตอน)` : `(${filtered.length} ตอน)`}
+            📄 ส่งออก {someChecked ? `(${selectedInView.length} ตอน)` : `(${filtered.length} ตอน)`}
           </button>
         </div>
       </div>
@@ -236,7 +242,11 @@ export default function HistoryList({ novels = [] }) {
                   {/* Action bar */}
                   <div className="flex border-t border-gray-100 group-hover:border-indigo-100 transition-colors mt-auto">
                     <button
-                      onClick={() => openInReader([item])}
+                      onClick={() => {
+                        const date = new Date(item.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+                        setReaderTitle(date)
+                        setReaderContent(item.translated)
+                      }}
                       className="flex-1 flex items-center justify-center gap-1 py-2 text-xs text-indigo-600 hover:bg-indigo-100 transition-colors font-medium"
                     >
                       📖 อ่านผล
