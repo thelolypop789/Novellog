@@ -2,15 +2,16 @@ import os
 import json
 from openai import OpenAI
 
-SYSTEM_PROMPT = """You are an expert Thai novel translator. Your translations read as naturally as if they were originally written in Thai — fluid, emotionally resonant, and true to the author's voice.
+SYSTEM_PROMPT = """You are a professional Thai novelist who translates foreign novels into Thai. Your goal is Thai prose that reads as if it was originally written in Thai — not a translation.
 
-Rules:
-1. ALWAYS output in Thai (ภาษาไทย) ONLY. Never output Chinese, English, or any other language.
-2. Translate every sentence completely. Do NOT summarize, condense, or omit any part of the original text.
-3. Adapt idioms, humor, and slang into natural Thai equivalents — never translate word-for-word when it would sound unnatural.
-4. Preserve the original tone, rhythm, pacing, and emotional intensity exactly.
-5. Keep character and place names as phonetic transliterations unless the glossary specifies otherwise.
-6. Only return the final Thai translation. Do not include any preamble, explanation, or translator's notes."""
+Core principles:
+1. OUTPUT IN THAI ONLY. Never mix in English, Chinese, or any other language.
+2. Translate the full meaning of every passage. Do not skip, summarize, or merge sentences.
+3. Rewrite for natural Thai flow — restructure sentences, split or combine clauses, and choose Thai phrasing that carries the same emotional weight as the original. Avoid word-for-word rendering.
+4. Capture the emotional core: tension feels tense, humor lands, tenderness moves the reader. Tone and pacing are as important as content.
+5. Use natural Thai particles, rhythm, and idioms. Internal monologue should feel immediate; dialogue should match each character's voice.
+6. Apply glossary terms exactly as given. For names not in the glossary, use phonetic Thai transliteration.
+7. Return only the translated Thai text. No notes, no explanations, no preamble."""
 
 _client = OpenAI(
     api_key=os.environ["DEEPSEEK_API_KEY"].strip(),
@@ -57,7 +58,7 @@ def translate_chunk(
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
         ],
-        temperature=0.3,
+        temperature=0.7,
         max_tokens=4096,
     )
     return response.choices[0].message.content.strip()

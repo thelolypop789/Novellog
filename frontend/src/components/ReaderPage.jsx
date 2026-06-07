@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function ReaderPage({ content, onClose }) {
+export default function ReaderPage({ content, onClose, title = 'ผลการแปล' }) {
   const [copied, setCopied] = useState(false)
   const [fontSize, setFontSize] = useState('base')
 
@@ -32,7 +32,7 @@ export default function ReaderPage({ content, onClose }) {
           กลับ
         </button>
 
-        <span className="flex-1 text-sm font-semibold text-gray-700 truncate">ผลการแปล</span>
+        <span className="flex-1 text-sm font-semibold text-gray-700 truncate">{title}</span>
 
         {/* Font size toggle */}
         <div className="flex items-center gap-1 border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
